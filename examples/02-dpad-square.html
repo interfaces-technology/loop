@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loop — D-pad Square</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.25rem; font-weight: 500; opacity: 0.6; }
+    .device { font-size: 0.75rem; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.1em; }
+    .hint { font-size: 0.85rem; opacity: 0.4; text-align: center; max-width: 320px; }
+    #arena {
+      position: relative;
+      width: min(400px, 90vw);
+      height: min(400px, 90vw);
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    #square {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      background: #e74c3c;
+      border-radius: 6px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: background 0.15s;
+    }
+    #square.active { background: #2ecc71; }
+  </style>
+</head>
+<body>
+  <h1>Loop — D-pad Square</h1>
+  <p class="device" id="device">device: none</p>
+  <p class="hint">Use arrow keys, WASD, or a gamepad d-pad</p>
+
+  <div id="arena">
+    <div id="square"></div>
+  </div>
+
+  <script type="module">
+    import loop from "../dist/index.js";
+
+    const square = document.getElementById("square");
+    const deviceLabel = document.getElementById("device");
+    const arena = document.getElementById("arena");
+
+    const dpad = loop.input("dpad");
+
+    let posX = 0;
+    let posY = 0;
+    const speed = 4;
+    const arenaRect = () => arena.getBoundingClientRect();
+    const half = 24;
+
+    loop.tick(() => {
+      const { x, y } = dpad.value;
+      posX += x * speed;
+      posY += y * speed;
+
+      const rect = arenaRect();
+      const maxX = rect.width / 2 - half;
+      const maxY = rect.height / 2 - half;
+      posX = Math.max(-maxX, Math.min(maxX, posX));
+      posY = Math.max(-maxY, Math.min(maxY, posY));
+
+      square.style.transform = `translate(calc(-50% + ${posX}px), calc(-50% + ${posY}px))`;
+      square.classList.toggle("active", x !== 0 || y !== 0);
+
+      deviceLabel.textContent = `device: ${loop.getDpadActiveDevice()}`;
+    });
+
+    dpad.on("change", (v) => {
+      square.classList.toggle("active", v.x !== 0 || v.y !== 0);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loop — Sliders Cube</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+    h1 { font-size: 1.25rem; font-weight: 500; opacity: 0.6; }
+    .device { font-size: 0.75rem; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.1em; }
+    .hint { font-size: 0.85rem; opacity: 0.4; text-align: center; max-width: 400px; }
+    #canvas-container {
+      width: min(500px, 90vw);
+      height: min(400px, 60vh);
+      border: 1px solid #222;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      width: min(320px, 90vw);
+    }
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+    }
+    .control-row label { width: 70px; opacity: 0.6; }
+    .control-row input[type="range"] { flex: 1; accent-color: #e74c3c; }
+    .control-row span { width: 36px; text-align: right; opacity: 0.5; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <h1>Loop — Sliders Cube</h1>
+  <p class="device" id="device">device: on-screen</p>
+  <p class="hint">Use on-screen sliders, a gamepad (sticks + RT), or MIDI CC knobs</p>
+
+  <div id="canvas-container"></div>
+
+  <div class="controls">
+    <div class="control-row">
+      <label>X</label>
+      <input type="range" id="slider-x" min="0" max="100" value="50" />
+      <span id="val-x">0.50</span>
+    </div>
+    <div class="control-row">
+      <label>Y</label>
+      <input type="range" id="slider-y" min="0" max="100" value="50" />
+      <span id="val-y">0.50</span>
+    </div>
+    <div class="control-row">
+      <label>Rotate</label>
+      <input type="range" id="slider-r" min="0" max="100" value="0" />
+      <span id="val-r">0.00</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js";
+    import loop from "../dist/index.js";
+
+    const container = document.getElementById("canvas-container");
+    const deviceLabel = document.getElementById("device");
+
+    const sliderX = document.getElementById("slider-x");
+    const sliderY = document.getElementById("slider-y");
+    const sliderR = document.getElementById("slider-r");
+    const valX = document.getElementById("val-x");
+    const valY = document.getElementById("val-y");
+    const valR = document.getElementById("val-r");
+
+    const sliders = loop.getSlidersInput();
+
+    // On-screen fallback: update handles when sliders move
+    function bindSlider(el, handle, label) {
+      el.addEventListener("input", () => {
+        const v = Number(el.value) / 100;
+        handle._setValue(v);
+        loop.setSlidersActiveDevice("on-screen");
+        label.textContent = v.toFixed(2);
+      });
+    }
+
+    bindSlider(sliderX, sliders.x, valX);
+    bindSlider(sliderY, sliders.y, valY);
+    bindSlider(sliderR, sliders.rotation, valR);
+
+    // Three.js scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111111);
+
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.z = 3;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    container.appendChild(renderer.domElement);
+
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshStandardMaterial({ color: 0xe74c3c });
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1.5);
+    light.position.set(2, 3, 4);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040));
+
+    function resize() {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    loop.tick(() => {
+      const x = sliders.x.value;
+      const y = sliders.y.value;
+      const rot = sliders.rotation.value;
+
+      cube.position.x = (x - 0.5) * 2;
+      cube.position.y = (y - 0.5) * 2;
+      cube.rotation.y = rot * Math.PI * 2;
+
+      renderer.render(scene, camera);
+
+      deviceLabel.textContent = `device: ${loop.getSlidersActiveDevice()}`;
+
+      // Sync on-screen sliders when gamepad/MIDI drives values
+      if (loop.getSlidersActiveDevice() !== "on-screen") {
+        sliderX.value = String(Math.round(x * 100));
+        sliderY.value = String(Math.round(y * 100));
+        sliderR.value = String(Math.round(rot * 100));
+        valX.textContent = x.toFixed(2);
+        valY.textContent = y.toFixed(2);
+        valR.textContent = rot.toFixed(2);
+      }
+    });
+  </script>
+</body>
+</html>
