@@ -1,5 +1,5 @@
 {
-  "name": "@interfaces-lab/loop",
+  "name": "@theinterfaces-lab/loop",
   "version": "0.1.0",
   "description": "Loop is the wire — carry normalized packets between inputs and outputs.",
   "type": "module",

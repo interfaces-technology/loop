@@ -1,4 +1,4 @@
-# @interfaces-lab/loop
+# @theinterfaces-lab/loop
 
 **Loop is the wire.** You author the two ends; Loop carries a normalized packet between them and never renders anything itself.
 
@@ -7,7 +7,7 @@ By [Interfaces Lab](https://github.com/interfaces-technology).
 ## Install
 
 ```bash
-npm install @interfaces-lab/loop
+npm install @theinterfaces-lab/loop
 ```
 
 Or use directly in the browser — no build step required:
@@ -21,7 +21,7 @@ Or use directly in the browser — no build step required:
 ## Quick start
 
 ```javascript
-import loop from "@interfaces-lab/loop";
+import loop from "@theinterfaces-lab/loop";
 
 const dpad = loop.input("dpad");
 

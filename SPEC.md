@@ -114,7 +114,7 @@ Cross-device relay; marketplace/publishing; AI composer; visual canvas; accounts
 
 ## 12. Package & repo
 
-`@interfaces-lab/loop` · repo `interfaces-technology/loop` (Interfaces Lab) · ES module + TS types, no build step, offline by default.
+`@theinterfaces-lab/loop` · repo `interfaces-technology/loop` (Interfaces Lab) · ES module + TS types, no build step, offline by default.
 
 ## 13. Open questions (resolved for v0.1)
 
