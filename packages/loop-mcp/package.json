@@ -4,7 +4,7 @@
   "description": "MCP server exposing Loop documentation (SPEC, README, examples).",
   "type": "module",
   "bin": {
-    "loop-mcp": "./dist/index.js"
+    "loop-mcp": "dist/index.js"
   },
   "files": [
     "dist",
