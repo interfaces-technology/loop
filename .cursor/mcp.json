@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "loop-docs": {
+      "command": "node",
+      "args": ["packages/loop-mcp/dist/index.js"],
+      "env": {
+        "LOOP_DOCS_ROOT": "."
+      }
+    }
+  }
+}

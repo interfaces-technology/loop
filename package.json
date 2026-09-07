@@ -15,6 +15,8 @@
   ],
   "scripts": {
     "build": "node_modules/.bin/tsc",
+    "build:mcp": "npm run build --prefix packages/loop-mcp",
+    "test:mcp": "npm test --prefix packages/loop-mcp",
     "test": "node_modules/.bin/vitest run",
     "validate": "node_modules/.bin/tsc --noEmit && node_modules/.bin/vitest run",
     "relay": "node scripts/relay-server.mjs"
