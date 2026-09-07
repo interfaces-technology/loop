@@ -1,5 +1,5 @@
 {
-  "name": "@interfaces-lab/loop",
+  "name": "@theinterfaces-lab/loop",
   "version": "0.1.0",
   "description": "Loop is the wire — carry normalized packets between inputs and outputs.",
   "type": "module",
@@ -16,11 +16,14 @@
   "scripts": {
     "build": "node_modules/.bin/tsc",
     "test": "node_modules/.bin/vitest run",
-    "validate": "node_modules/.bin/tsc --noEmit && node_modules/.bin/vitest run"
+    "validate": "node_modules/.bin/tsc --noEmit && node_modules/.bin/vitest run",
+    "relay": "node scripts/relay-server.mjs"
   },
   "devDependencies": {
+    "@types/ws": "^8.18.1",
     "jsdom": "^30.0.1",
     "typescript": "^5",
-    "vitest": "^3"
+    "vitest": "^3",
+    "ws": "^8.21.3"
   }
 }

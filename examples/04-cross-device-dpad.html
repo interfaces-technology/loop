@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loop — Cross-Device D-pad</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      padding: 1.5rem;
+    }
+    h1 { font-size: 1.25rem; font-weight: 500; opacity: 0.6; }
+    .meta { font-size: 0.75rem; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.1em; }
+    .hint { font-size: 0.85rem; opacity: 0.45; text-align: center; max-width: 420px; line-height: 1.5; }
+
+    .card {
+      width: min(440px, 100%);
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .card h2 {
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.45;
+    }
+    .field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .field label {
+      font-size: 0.75rem;
+      opacity: 0.5;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .field-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: stretch;
+    }
+    .field-row input { flex: 1; min-width: 0; }
+
+    input, button, select {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #f0f0f0;
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.95rem;
+    }
+    button { cursor: pointer; white-space: nowrap; }
+    button:hover { border-color: #666; }
+    button.primary {
+      background: #f0f0f0;
+      color: #0a0a0a;
+      border-color: #f0f0f0;
+      font-weight: 500;
+      width: 100%;
+      padding: 0.75rem;
+    }
+    button.primary:hover { background: #ddd; }
+    button.ghost { background: transparent; }
+
+    .role-grid, .transport-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .choice {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 0.75rem;
+      text-align: left;
+      cursor: pointer;
+      color: inherit;
+      font: inherit;
+    }
+    .choice:hover { border-color: #555; }
+    .choice.active {
+      border-color: #f0f0f0;
+      background: #1f1f1f;
+    }
+    .choice strong {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.2rem;
+    }
+    .choice span {
+      font-size: 0.75rem;
+      opacity: 0.45;
+      line-height: 1.35;
+    }
+
+    .share-box {
+      background: #0d0d0d;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      word-break: break-all;
+      opacity: 0.75;
+    }
+    .share-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .share-actions button { flex: 1; min-width: 7rem; }
+
+    #qr-panel {
+      width: min(440px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .qr-frame {
+      background: #fff;
+      border-radius: 12px;
+      padding: 0.7rem;
+      line-height: 0;
+    }
+    #qr {
+      display: block;
+      width: 176px;
+      height: 176px;
+    }
+    .role-controller.connected #qr-panel { display: none; }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.55;
+    }
+    .status-pill::before {
+      content: "";
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: #555;
+    }
+    .status-pill.connected::before { background: #2ecc71; }
+    .status-pill.connecting::before { background: #f39c12; }
+    .status-pill.error::before { background: #e74c3c; }
+
+    #arena {
+      position: relative;
+      width: min(400px, 90vw);
+      height: min(400px, 90vw);
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    #square {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      background: #e74c3c;
+      border-radius: 6px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #square.active { background: #2ecc71; }
+
+    .role-controller #arena { display: none; }
+    .connected #setup { display: none; }
+    .connected #session { display: flex; }
+    #session { display: none; flex-direction: column; gap: 0.75rem; width: min(440px, 100%); align-items: center; }
+
+    #touch-pad {
+      display: none;
+      width: min(280px, 78vw);
+      height: min(280px, 78vw);
+      position: relative;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: grab;
+    }
+    .role-controller.connected #touch-pad { display: block; }
+    .pad-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      box-shadow: inset 0 0 0 48px #0f0f0f;
+    }
+    #touch-pad.active { cursor: grabbing; }
+    #touch-pad.active .pad-ring { border-color: #666; }
+    .pad-mark {
+      position: absolute;
+      color: #555;
+      font-size: 1.1rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .pad-mark-up { top: 14%; left: 50%; transform: translateX(-50%); }
+    .pad-mark-down { bottom: 14%; left: 50%; transform: translateX(-50%); }
+    .pad-mark-left { left: 16%; top: 50%; transform: translateY(-50%); }
+    .pad-mark-right { right: 16%; top: 50%; transform: translateY(-50%); }
+    #touch-knob {
+      position: absolute;
+      width: 38%;
+      height: 38%;
+      border-radius: 50%;
+      background: #2a2a2a;
+      border: 1px solid #666;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    #touch-pad.active #touch-knob {
+      background: #3a3a3a;
+      border-color: #f0f0f0;
+    }
+    .session-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      font-size: 0.85rem;
+      opacity: 0.65;
+    }
+    .session-row strong { opacity: 1; color: #f0f0f0; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <h1>Loop — Cross-Device D-pad</h1>
+  <p class="status-pill" id="status">idle</p>
+
+  <section class="card" id="setup">
+    <h2>Connection setup</h2>
+    <p class="hint">Pick a role on each device, use the same room code, then connect.</p>
+
+    <div class="field">
+      <label>1. Role on this device</label>
+      <div class="role-grid" id="role-grid">
+        <button type="button" class="choice active" data-role="controller">
+          <strong>Controller</strong>
+          <span>Phone or keyboard — sends d-pad input</span>
+        </button>
+        <button type="button" class="choice" data-role="display">
+          <strong>Display</strong>
+          <span>Laptop or TV — shows the moving square</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>2. Transport</label>
+      <div class="transport-grid" id="transport-grid">
+        <button type="button" class="choice active" data-transport="broadcast">
+          <strong>Broadcast</strong>
+          <span>Same machine, multiple tabs</span>
+        </button>
+        <button type="button" class="choice" data-transport="websocket">
+          <strong>WebSocket</strong>
+          <span>Phone + laptop on your network</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="field hidden" id="relay-field">
+      <label for="relay-url">Relay server</label>
+      <input id="relay-url" placeholder="ws://192.168.1.5:8787" />
+      <p class="hint" style="max-width: none; text-align: left; margin-top: 0.25rem;">
+        Run <code style="opacity:0.7">npm run relay</code> on your laptop, then use its LAN IP here.
+      </p>
+    </div>
+
+    <div class="field">
+      <label for="room">3. Room code</label>
+      <div class="field-row">
+        <input id="room" value="loop-demo" maxlength="32" />
+        <button type="button" id="new-room" class="ghost">New</button>
+      </div>
+    </div>
+
+    <div class="field" id="share-field">
+      <label>Share with the other device</label>
+      <div class="share-box" id="share-controller">Controller link loading…</div>
+      <div class="share-actions">
+        <button type="button" id="copy-controller">Copy controller link</button>
+        <button type="button" id="copy-display">Copy display link</button>
+      </div>
+    </div>
+
+    <button type="button" class="primary" id="connect">Connect</button>
+  </section>
+
+  <section id="qr-panel">
+    <div class="qr-frame">
+      <canvas id="qr" width="176" height="176"></canvas>
+    </div>
+    <p class="hint" id="qr-caption">Scan to open on the other device</p>
+  </section>
+
+  <section id="session">
+    <div class="card">
+      <h2>Session</h2>
+      <div class="session-row"><span>Role</span><strong id="session-role">—</strong></div>
+      <div class="session-row"><span>Room</span><strong id="session-room">—</strong></div>
+      <div class="session-row"><span>Transport</span><strong id="session-transport">—</strong></div>
+      <div class="session-row"><span>Status</span><strong id="session-status">—</strong></div>
+      <button type="button" class="ghost" id="disconnect" style="margin-top: 0.5rem; width: 100%;">Disconnect</button>
+    </div>
+    <p class="hint" id="hint">Waiting for input…</p>
+    <div id="touch-pad" role="application" aria-label="D-pad">
+      <div class="pad-ring">
+        <span class="pad-mark pad-mark-up">▲</span>
+        <span class="pad-mark pad-mark-left">◀</span>
+        <span class="pad-mark pad-mark-right">▶</span>
+        <span class="pad-mark pad-mark-down">▼</span>
+        <div id="touch-knob"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="arena">
+    <div id="square"></div>
+  </div>
+
+  <script type="module">
+    import loop from "../dist/index.js";
+    import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm";
+
+    const params = new URLSearchParams(location.search);
+
+    const roleGrid = document.getElementById("role-grid");
+    const transportGrid = document.getElementById("transport-grid");
+    const roomInput = document.getElementById("room");
+    const relayField = document.getElementById("relay-field");
+    const relayUrlInput = document.getElementById("relay-url");
+    const connectBtn = document.getElementById("connect");
+    const disconnectBtn = document.getElementById("disconnect");
+    const newRoomBtn = document.getElementById("new-room");
+    const statusLabel = document.getElementById("status");
+    const hint = document.getElementById("hint");
+    const square = document.getElementById("square");
+    const arena = document.getElementById("arena");
+    const setup = document.getElementById("setup");
+    const session = document.getElementById("session");
+    const shareController = document.getElementById("share-controller");
+    const copyControllerBtn = document.getElementById("copy-controller");
+    const copyDisplayBtn = document.getElementById("copy-display");
+    const sessionRole = document.getElementById("session-role");
+    const sessionRoom = document.getElementById("session-room");
+    const sessionTransport = document.getElementById("session-transport");
+    const sessionStatus = document.getElementById("session-status");
+    const qrCanvas = document.getElementById("qr");
+    const qrCaption = document.getElementById("qr-caption");
+    const touchPad = document.getElementById("touch-pad");
+    const touchKnob = document.getElementById("touch-knob");
+    let qrGeneration = 0;
+
+    let role = params.get("role") === "display" ? "display" : "controller";
+    let transport = params.get("transport") === "websocket" ? "websocket" : "broadcast";
+    let stopPublish = null;
+    let stopTick = null;
+    let activeRelay = null;
+    let posX = 0;
+    let posY = 0;
+    let touchVec = { x: 0, y: 0 };
+    let padPointerId = null;
+    const speed = 4;
+    const half = 24;
+
+    function randomRoom() {
+      return `loop-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function defaultRelayUrl() {
+      const host = location.hostname === "localhost" || location.hostname === "127.0.0.1"
+        ? "localhost"
+        : location.hostname;
+      const port = "8787";
+      return `ws://${host}:${port}`;
+    }
+
+    function setRole(next) {
+      role = next;
+      for (const btn of roleGrid.querySelectorAll(".choice")) {
+        btn.classList.toggle("active", btn.dataset.role === role);
+      }
+      document.body.className = `role-${role}`;
+      updateShareLinks();
+    }
+
+    function setTransport(next) {
+      transport = next;
+      for (const btn of transportGrid.querySelectorAll(".choice")) {
+        btn.classList.toggle("active", btn.dataset.transport === transport);
+      }
+      relayField.classList.toggle("hidden", transport !== "websocket");
+      updateShareLinks();
+    }
+
+    function buildUrl(targetRole, options = {}) {
+      const url = new URL(location.href);
+      url.search = "";
+      url.searchParams.set("role", targetRole);
+      url.searchParams.set("room", roomInput.value.trim() || "loop-demo");
+      url.searchParams.set("transport", transport);
+      if (transport === "websocket") {
+        url.searchParams.set("relay", relayUrlInput.value.trim() || defaultRelayUrl());
+      }
+      if (options.autoconnect) {
+        url.searchParams.set("autoconnect", "1");
+      }
+      return url.toString();
+    }
+
+    function isLocalHost() {
+      return location.hostname === "localhost" || location.hostname === "127.0.0.1";
+    }
+
+    async function updateShareLinks() {
+      const code = roomInput.value.trim() || "loop-demo";
+      const otherRole = role === "controller" ? "display" : "controller";
+      const joinUrl = buildUrl(otherRole, { autoconnect: true });
+      shareController.textContent = buildUrl("controller");
+      shareController.title = `Open on the ${otherRole} device with room "${code}"`;
+      qrCaption.textContent = isLocalHost()
+        ? `Scan to join as ${otherRole}. Open this page via your laptop IP (not localhost) so the phone can reach it.`
+        : `Scan to join as ${otherRole} and connect automatically.`;
+
+      const gen = ++qrGeneration;
+      try {
+        await QRCode.toCanvas(qrCanvas, joinUrl, {
+          width: 176,
+          margin: 1,
+          color: { dark: "#111111", light: "#ffffff" },
+        });
+      } catch {
+        qrCaption.textContent = "QR code could not be generated. Copy a link instead.";
+      }
+      if (gen !== qrGeneration) return;
+    }
+
+    function setStatus(text, state = "") {
+      statusLabel.textContent = text;
+      statusLabel.className = `status-pill${state ? ` ${state}` : ""}`;
+      sessionStatus.textContent = text;
+    }
+
+    function createTransport(code) {
+      if (transport === "websocket") {
+        const url = relayUrlInput.value.trim() || defaultRelayUrl();
+        return loop.relay.websocketTransport(url, code);
+      }
+      return loop.relay.broadcastTransport(code);
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function clampStick(x, y) {
+      const mag = Math.hypot(x, y);
+      if (mag < 0.18) return { x: 0, y: 0 };
+      if (mag > 1) return { x: x / mag, y: y / mag };
+      return { x, y };
+    }
+
+    function setKnob(x, y) {
+      touchKnob.style.transform = `translate(calc(-50% + ${x * 38}%), calc(-50% + ${y * 38}%))`;
+    }
+
+    function resetTouchPad() {
+      touchVec = { x: 0, y: 0 };
+      padPointerId = null;
+      touchPad.classList.remove("active");
+      setKnob(0, 0);
+    }
+
+    function vecFromPointer(event) {
+      const rect = touchPad.getBoundingClientRect();
+      const x = (event.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
+      const y = (event.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
+      return clampStick(x, y);
+    }
+
+    function applyTouch(event) {
+      touchVec = vecFromPointer(event);
+      setKnob(touchVec.x, touchVec.y);
+    }
+
+    touchPad.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      padPointerId = event.pointerId;
+      try {
+        touchPad.setPointerCapture(event.pointerId);
+      } catch {
+        // Some browsers reject capture for synthetic or unmatched pointers.
+      }
+      touchPad.classList.add("active");
+      applyTouch(event);
+    });
+
+    touchPad.addEventListener("pointermove", (event) => {
+      if (padPointerId !== event.pointerId) return;
+      event.preventDefault();
+      applyTouch(event);
+    });
+
+    function endTouch(event) {
+      if (padPointerId !== event.pointerId) return;
+      resetTouchPad();
+    }
+
+    touchPad.addEventListener("pointerup", endTouch);
+    touchPad.addEventListener("pointercancel", endTouch);
+    touchPad.addEventListener("lostpointercapture", () => {
+      if (padPointerId === null) return;
+      resetTouchPad();
+    });
+    touchPad.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    function teardownSession() {
+      stopPublish?.();
+      stopPublish = null;
+      stopTick?.();
+      stopTick = null;
+      activeRelay?.disconnect();
+      activeRelay = null;
+      resetTouchPad();
+      document.body.classList.remove("connected");
+      arena.style.display = role === "display" ? "block" : "none";
+      setStatus("idle");
+    }
+
+    async function connect() {
+      const code = roomInput.value.trim();
+      if (!code) return;
+
+      teardownSession();
+
+      activeRelay = loop.relay.room(code, createTransport(code));
+      activeRelay.onStatus((status) => {
+        const state = status === "connected" ? "connected" : status === "connecting" ? "connecting" : status === "error" ? "error" : "";
+        setStatus(status, state);
+      });
+
+      connectBtn.disabled = true;
+      connectBtn.textContent = "Connecting…";
+
+      try {
+        await activeRelay.connect();
+      } catch (err) {
+        setStatus(`error — ${err.message}`, "error");
+        connectBtn.disabled = false;
+        connectBtn.textContent = "Connect";
+        return;
+      }
+
+      document.body.classList.add("connected");
+      sessionRole.textContent = role;
+      sessionRoom.textContent = code;
+      sessionTransport.textContent = transport === "websocket" ? "WebSocket" : "Broadcast";
+      connectBtn.disabled = false;
+      connectBtn.textContent = "Connect";
+
+      if (role === "controller") {
+        const dpad = loop.input("dpad");
+        stopPublish = activeRelay.publish(() => {
+          const usingTouch = touchVec.x !== 0 || touchVec.y !== 0;
+          return { kind: "value", value: usingTouch ? touchVec : dpad.value };
+        });
+        hint.textContent = "Drag the D-pad with your thumb. Arrow keys, WASD, and a gamepad still work.";
+        arena.style.display = "none";
+        return;
+      }
+
+      const remote = activeRelay.subscribe({ x: 0, y: 0 });
+      hint.textContent = "Waiting for controller input…";
+      arena.style.display = "block";
+
+      stopTick = loop.tick(() => {
+        const { x, y } = remote.value;
+        posX += x * speed;
+        posY += y * speed;
+
+        const rect = arena.getBoundingClientRect();
+        const maxX = rect.width / 2 - half;
+        const maxY = rect.height / 2 - half;
+        posX = Math.max(-maxX, Math.min(maxX, posX));
+        posY = Math.max(-maxY, Math.min(maxY, posY));
+
+        square.style.transform = `translate(calc(-50% + ${posX}px), calc(-50% + ${posY}px))`;
+        square.classList.toggle("active", x !== 0 || y !== 0);
+
+        if (x !== 0 || y !== 0) {
+          hint.textContent = "Receiving input from controller.";
+        }
+      });
+    }
+
+    roleGrid.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-role]");
+      if (!btn) return;
+      setRole(btn.dataset.role);
+    });
+
+    transportGrid.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-transport]");
+      if (!btn) return;
+      setTransport(btn.dataset.transport);
+    });
+
+    roomInput.addEventListener("input", updateShareLinks);
+    relayUrlInput.addEventListener("input", updateShareLinks);
+
+    newRoomBtn.addEventListener("click", () => {
+      roomInput.value = randomRoom();
+      updateShareLinks();
+    });
+
+    copyControllerBtn.addEventListener("click", async () => {
+      const ok = await copyText(buildUrl("controller"));
+      copyControllerBtn.textContent = ok ? "Copied!" : "Copy failed";
+      setTimeout(() => { copyControllerBtn.textContent = "Copy controller link"; }, 1500);
+    });
+
+    copyDisplayBtn.addEventListener("click", async () => {
+      const ok = await copyText(buildUrl("display"));
+      copyDisplayBtn.textContent = ok ? "Copied!" : "Copy failed";
+      setTimeout(() => { copyDisplayBtn.textContent = "Copy display link"; }, 1500);
+    });
+
+    connectBtn.addEventListener("click", connect);
+    disconnectBtn.addEventListener("click", teardownSession);
+
+    roomInput.value = params.get("room") || roomInput.value;
+    relayUrlInput.value = params.get("relay") || defaultRelayUrl();
+    setRole(role);
+    setTransport(transport);
+    updateShareLinks();
+
+    if (params.get("autoconnect") === "1") {
+      connect();
+    }
+  </script>
+</body>
+</html>
