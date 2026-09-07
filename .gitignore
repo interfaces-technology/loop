@@ -1,3 +1,6 @@
 node_modules/
 dist/
 .DS_Store
+packages/loop-mcp/node_modules/
+packages/loop-mcp/dist/
+packages/loop-mcp/docs/
