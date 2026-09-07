@@ -4,6 +4,8 @@
 
 By [Interfaces Lab](https://github.com/interfaces-technology).
 
+Docs, examples, and marketing live at [loop-marketing-five.vercel.app](https://loop-marketing-five.vercel.app). This repo is the library only.
+
 ## Install
 
 ```bash
@@ -32,7 +34,7 @@ loop.tick(() => {
 
 ## Examples
 
-Open with a local static server (`npx serve examples`):
+Live demos: [loop-marketing-five.vercel.app/examples](https://loop-marketing-five.vercel.app/examples). Contributor fixtures in this repo (`npx serve examples`):
 
 | Example | What it shows |
 |---------|---------------|
