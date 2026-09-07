@@ -4,6 +4,8 @@
 
 By [Interfaces Lab](https://github.com/interfaces-technology).
 
+Docs, examples, and marketing live on the [Loop site](https://github.com/interfaces-technology/loop-marketing). This repo is the library only.
+
 ## Install
 
 ```bash
@@ -32,7 +34,7 @@ loop.tick(() => {
 
 ## Examples
 
-Open with a local static server (`npx serve examples`):
+Live demos: [loop-marketing](https://github.com/interfaces-technology/loop-marketing) (`/examples`). Contributor fixtures in this repo (`npx serve examples`):
 
 | Example | What it shows |
 |---------|---------------|
