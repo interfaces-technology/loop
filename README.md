@@ -4,7 +4,7 @@
 
 By [Interfaces Lab](https://github.com/interfaces-technology).
 
-Docs, examples, and marketing live on the [Loop site](https://github.com/interfaces-technology/loop-marketing). This repo is the library only.
+Docs, examples, and marketing live at [loop-marketing-five.vercel.app](https://loop-marketing-five.vercel.app). This repo is the library only.
 
 ## Install
 
@@ -34,7 +34,7 @@ loop.tick(() => {
 
 ## Examples
 
-Live demos: [loop-marketing](https://github.com/interfaces-technology/loop-marketing) (`/examples`). Contributor fixtures in this repo (`npx serve examples`):
+Live demos: [loop-marketing-five.vercel.app/examples](https://loop-marketing-five.vercel.app/examples). Contributor fixtures in this repo (`npx serve examples`):
 
 | Example | What it shows |
 |---------|---------------|
