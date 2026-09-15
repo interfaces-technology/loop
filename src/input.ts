@@ -1,6 +1,5 @@
 import { createHandle, type Handle } from "./handle.js";
 import type { Vec } from "./types.js";
-import { source, sink, type Stage } from "./component.js";
 import { getKeyboardInput } from "./sources/keyboard.js";
 import { getDpadInput } from "./sources/dpad.js";
 import { getSlidersInput } from "./sources/gamepad.js";
@@ -15,7 +14,6 @@ interface SliderHandles {
 }
 
 const inputRegistry = new Map<string, InputHandle>();
-const outputRegistry = new Map<string, Stage>();
 
 function isSliderHandles(v: InputHandle): v is SliderHandles {
   return typeof v === "object" && v !== null && "x" in v && "y" in v && "rotation" in v;
@@ -54,22 +52,6 @@ export function input(name: string): Handle<string> | Handle<Vec> | Handle<numbe
     );
   }
   return resolved;
-}
-
-export function output(name: string): Stage {
-  const existing = outputRegistry.get(name);
-  if (existing) return existing;
-
-  const stage = sink({
-    to: name,
-    accepts: ["value", "frame", "data"],
-    render() {
-      throw new Error(`Output "${name}" has no hardware sink registered (coming in slice 4+)`);
-    },
-  });
-
-  outputRegistry.set(name, stage);
-  return stage;
 }
 
 export { getSlidersInput };

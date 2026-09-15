@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { source, sink } from "../src/component.js";
 import { pipe, runPipeline } from "../src/pipe.js";
-import { room, clearRelayRooms } from "../src/relay.js";
-import { memoryTransport } from "../src/transport/memory.js";
-import { clearMemoryTransports } from "../src/transport/memory.js";
+import { createHandle } from "../src/handle.js";
+import { room, online, clearRelayRooms } from "../src/relay.js";
+import { memoryTransport, clearMemoryTransports } from "../src/transport/memory.js";
 import { serializePacket, deserializePacket, payloadToJsonText } from "../src/transport/serialize.js";
 
 describe("packet serialization", () => {
@@ -109,5 +109,59 @@ describe("cross-device relay", () => {
     runPipeline(inbound.stages);
 
     expect(results).toEqual([0.42]);
+  });
+
+  it("broadcast() streams a local handle's changes to the room", async () => {
+    const transport = memoryTransport("broadcast-demo");
+    const control = room("control-end", transport);
+    const display = room("display-end", transport);
+
+    await control.connect();
+    await display.connect();
+
+    const knob = createHandle(0);
+    const seen: number[] = [];
+
+    display.subscribe(0).on("change", (v) => seen.push(v as number));
+    const unsubscribe = control.broadcast(knob);
+
+    knob._setValue(0.25);
+    knob._setValue(0.5);
+    knob._setValue(0.25);
+
+    expect(seen).toEqual([0.25, 0.5, 0.25]);
+    unsubscribe();
+
+    knob._setValue(0.9);
+    expect(seen).toEqual([0.25, 0.5, 0.25]);
+  });
+
+  it("broadcast() sends string handles as text packets", async () => {
+    const transport = memoryTransport("text-broadcast");
+    const control = room("control-text", transport);
+    const display = room("display-text", transport);
+
+    await control.connect();
+    await display.connect();
+
+    const seen: string[] = [];
+    transport.onPacket((p) => {
+      if (p.kind === "data" && p.type === "text") seen.push(typeof p.value === "string" ? p.value : "");
+    });
+
+    const field = createHandle("ready");
+    control.broadcast(field);
+    field._setValue("cook");
+    field._setValue("serve");
+
+    expect(seen).toEqual(["ready", "cook", "serve"]);
+  });
+
+  it("online() builds a room over a websocket transport", () => {
+    const relayRoom = online("ws://localhost:8787/{room}", "kitchen");
+    expect(relayRoom.code).toBe("kitchen");
+    expect(relayRoom.transport).toBeDefined();
+    relayRoom.disconnect();
+    clearRelayRooms();
   });
 });

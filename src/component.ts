@@ -11,7 +11,8 @@ export interface TransformDef {
   accepts: Kind | Kind[];
   emits: Kind;
   dataType?: string;
-  process: (input: Packet) => Packet;
+  acceptsType?: string;
+  process: (input: Packet) => Packet | null;
 }
 
 export interface SinkDef {
@@ -29,8 +30,9 @@ export interface Stage {
   emits?: Kind;
   accepts?: Kind | Kind[];
   dataType?: string;
+  acceptsType?: string;
   read?: () => Packet | null;
-  process?: (input: Packet) => Packet;
+  process?: (input: Packet) => Packet | null;
   render?: (input: Packet) => void;
 }
 
@@ -55,6 +57,7 @@ export function transform(def: TransformDef): Stage {
     accepts: def.accepts,
     emits: def.emits,
     dataType: def.dataType,
+    acceptsType: def.acceptsType,
     process: def.process,
   };
 }
@@ -107,9 +110,10 @@ export function checkAdjacent(a: Stage, b: Stage): void {
     );
   }
 
-  if (aEmits === "data" && a.dataType && b.dataType && a.dataType !== b.dataType) {
+  const bType = b.acceptsType ?? b.dataType;
+  if (aEmits === "data" && a.dataType && bType && a.dataType !== bType) {
     throw new Error(
-      `Data type mismatch: "${a.name}" emits data:"${a.dataType}" but "${b.name}" expects data:"${b.dataType}"`,
+      `Data type mismatch: "${a.name}" emits data:"${a.dataType}" but "${b.name}" expects data:"${bType}"`,
     );
   }
 }
