@@ -10,17 +10,24 @@ import {
 } from "./component.js";
 import { pipe, connect } from "./pipe.js";
 import { tick } from "./runtime.js";
-import { input, output, resolveInput, getSlidersInput } from "./input.js";
+import { input, resolveInput, getSlidersInput } from "./input.js";
+import { toNumber, toText, clamp } from "./transforms.js";
+import { receipt } from "./devices/index.js";
 import { getDpadActiveDevice } from "./sources/dpad.js";
 import { getSlidersActiveDevice, setSlidersActiveDevice } from "./sources/gamepad.js";
-import { room as relayRoom, clearRelayRooms } from "./relay.js";
+import { room as relayRoom, online as relayOnline, clearRelayRooms } from "./relay.js";
 import { broadcastTransport } from "./transport/broadcast.js";
 import { websocketTransport } from "./transport/websocket.js";
 import { memoryTransport } from "./transport/memory.js";
+import {
+  output,
+  registerSink,
+  hasSink,
+  listSinks,
+  type RegisteredSink,
+} from "./sink-registry.js";
 
-function notImplemented(name: string): never {
-  throw new Error(`${name} is not implemented yet (coming in slice 4+)`);
-}
+registerSink("receipt", receipt().sink);
 
 const loop = {
   source: (def: SourceDef) => source(def),
@@ -35,6 +42,10 @@ const loop = {
   output,
   tick,
 
+  registerSink,
+  hasSink,
+  listSinks,
+
   resolveInput,
   getSlidersInput,
 
@@ -42,12 +53,19 @@ const loop = {
   getSlidersActiveDevice,
   setSlidersActiveDevice,
 
-  layout: () => notImplemented("loop.layout"),
-  filter: () => notImplemented("loop.filter"),
-  capture: () => notImplemented("loop.capture"),
+  recipes: {
+    toNumber,
+    toText,
+    clamp,
+  },
+
+  devices: {
+    receipt,
+  },
 
   relay: {
     room: relayRoom,
+    online: relayOnline,
     broadcastTransport,
     websocketTransport,
     memoryTransport,
@@ -63,6 +81,9 @@ export type { Handle } from "./handle.js";
 export type { Packet, Vec, Kind } from "./types.js";
 export type { Transport, TransportStatus } from "./transport/types.js";
 export type { RelayRoom } from "./relay.js";
+export type { RegisteredSink } from "./sink-registry.js";
+export type { ToTextOptions } from "./transforms.js";
+export type { ReceiptOptions, ReceiptPrinter } from "./devices/receipt.js";
 
 export {
   source,
@@ -74,4 +95,12 @@ export {
   input,
   output,
   tick,
+  registerSink,
+  hasSink,
+  listSinks,
+  toNumber,
+  toText,
+  clamp,
+  receipt,
+  relayOnline as online,
 };

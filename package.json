@@ -1,12 +1,16 @@
 {
   "name": "@theinterfaces-lab/loop",
-  "version": "0.1.0",
-  "description": "Loop is the wire — carry normalized packets between inputs and outputs.",
+  "version": "0.3.0",
+  "description": "Loop is the wire — connect inputs, outputs, controls and devices with one normalized packet.",
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./kit": {
+      "types": "./dist/kit/index.d.ts",
+      "import": "./dist/kit/index.js"
     }
   },
   "files": [

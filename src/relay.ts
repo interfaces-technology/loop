@@ -4,6 +4,7 @@ import { getRuntime } from "./runtime.js";
 import type { Kind, Packet, Vec } from "./types.js";
 import { isVec } from "./types.js";
 import { broadcastTransport } from "./transport/broadcast.js";
+import { websocketTransport } from "./transport/websocket.js";
 import type { Transport, TransportStatus } from "./transport/types.js";
 
 const roomRegistry = new Map<string, RelayRoom>();
@@ -17,6 +18,8 @@ export interface RelayRoom {
   inbound(opts: { emits: Kind; dataType?: string }): Stage;
   subscribe<T extends number | Vec>(initial: T): Handle<T>;
   publish(getPacket: () => Packet | null): () => void;
+  /** Stream a local handle's changes out to the room. Returns an unsubscribe fn. */
+  broadcast<T extends number | Vec | string>(handle: Handle<T>): () => void;
   onStatus(fn: (status: TransportStatus) => void): () => void;
 }
 
@@ -27,6 +30,11 @@ export function room(code: string, transport?: Transport): RelayRoom {
   const relayRoom = createRelayRoom(code, transport ?? broadcastTransport(code));
   roomRegistry.set(code, relayRoom);
   return relayRoom;
+}
+
+/** A room over the internet — WebSocket transport to a shared relay server. */
+export function online(url: string, code: string): RelayRoom {
+  return room(code, websocketTransport(url, code));
 }
 
 export function clearRelayRooms(): void {
@@ -112,6 +120,21 @@ function createRelayRoom(code: string, transport: Transport): RelayRoom {
         last = key;
 
         transport.send(packet);
+      });
+    },
+
+    broadcast<T extends number | Vec | string>(handle: Handle<T>) {
+      function toPacket(value: T): Packet {
+        if (typeof value === "string") {
+          return { kind: "data", type: "text", value };
+        }
+        return { kind: "value", value: value as number | Vec };
+      }
+
+      transport.send(toPacket(handle.value));
+
+      return handle.on("change", (value) => {
+        transport.send(toPacket(value));
       });
     },
 
