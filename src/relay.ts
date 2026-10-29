@@ -14,8 +14,8 @@ export interface RelayRoom {
   readonly transport: Transport;
   connect(): Promise<void>;
   disconnect(): void;
-  outbound(opts: { accepts: Kind | Kind[]; dataType?: string }): Stage;
-  inbound(opts: { emits: Kind; dataType?: string }): Stage;
+  outbound(opts: { in: Kind | Kind[]; dataType?: string }): Stage;
+  inbound(opts: { out: Kind; dataType?: string }): Stage;
   subscribe<T extends number | Vec>(initial: T): Handle<T>;
   publish(getPacket: () => Packet | null): () => void;
   /** Stream a local handle's changes out to the room. Returns an unsubscribe fn. */
@@ -71,9 +71,9 @@ function createRelayRoom(code: string, transport: Transport): RelayRoom {
     outbound(opts) {
       return sink({
         to: `relay:${code}:out`,
-        accepts: opts.accepts,
+        in: opts.in,
         dataType: opts.dataType,
-        render(packet) {
+        draw(packet) {
           transport.send(packet);
         },
       });
@@ -82,9 +82,9 @@ function createRelayRoom(code: string, transport: Transport): RelayRoom {
     inbound(opts) {
       return source({
         from: `relay:${code}:in`,
-        emits: opts.emits,
+        out: opts.out,
         dataType: opts.dataType,
-        read() {
+        poll() {
           return latestPacket;
         },
       });
@@ -96,7 +96,7 @@ function createRelayRoom(code: string, transport: Transport): RelayRoom {
       transport.onPacket((packet) => {
         if (packet.kind !== "value") return;
 
-        const value = packet.value;
+        const value = packet.v;
         if (typeof initial === "number" && typeof value === "number") {
           handle._setValue(value as T);
         } else if (isVec(initial) && isVec(value)) {
@@ -128,7 +128,7 @@ function createRelayRoom(code: string, transport: Transport): RelayRoom {
         if (typeof value === "string") {
           return { kind: "data", type: "text", value };
         }
-        return { kind: "value", value: value as number | Vec };
+        return { kind: "value", v: value as number | Vec };
       }
 
       transport.send(toPacket(handle.value));

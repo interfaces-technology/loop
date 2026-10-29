@@ -16,9 +16,9 @@ export function parseNumber(v: unknown): number | null {
 
 export function toNumber(): TransformDef {
   return {
-    accepts: "data",
-    acceptsType: "text",
-    emits: "data",
+    in: "data",
+    inType: "text",
+    out: "data",
     dataType: "number",
     process(input) {
       if (input.kind !== "data") return input;
@@ -32,9 +32,9 @@ export function toNumber(): TransformDef {
 export function toText(opts: ToTextOptions = {}): TransformDef {
   const { precision = 2 } = opts;
   return {
-    accepts: "data",
-    acceptsType: "number",
-    emits: "data",
+    in: "data",
+    inType: "number",
+    out: "data",
     dataType: "text",
     process(input) {
       if (input.kind !== "data") return input;
@@ -47,14 +47,14 @@ export function toText(opts: ToTextOptions = {}): TransformDef {
 
 export function clamp(min: number, max: number): TransformDef {
   return {
-    accepts: "value",
-    emits: "value",
+    in: "value",
+    out: "value",
     process(input) {
       if (input.kind !== "value") return input;
-      if (isVec(input.value)) {
-        return { kind: "value", value: clampVec(input.value, min, max) };
+      if (isVec(input.v)) {
+        return { kind: "value", v: clampVec(input.v, min, max) };
       }
-      return { kind: "value", value: Math.max(min, Math.min(max, input.value)) };
+      return { kind: "value", v: Math.max(min, Math.min(max, input.v)) };
     },
   };
 }

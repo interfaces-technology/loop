@@ -165,7 +165,7 @@ describe("kit components", () => {
     expect(c.value.value).toBe(0);
   });
 
-  it("dpad emits a Vec and mirrors the keyboard", () => {
+  it("dpad out a Vec and mirrors the keyboard", () => {
     const c = dpad();
     cleanup.push(c.destroy);
     expect(c.value.value).toEqual({ x: 0, y: 0 });

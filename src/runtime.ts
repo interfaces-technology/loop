@@ -1,5 +1,5 @@
-import type { Pipeline } from "./pipe.js";
-import { runPipeline } from "./pipe.js";
+import type { Pipeline } from "./link.js";
+import { runPipeline } from "./link.js";
 import type { Handle } from "./handle.js";
 
 type TickFn = () => void;

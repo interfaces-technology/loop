@@ -2,7 +2,7 @@ import type { Packet, Vec } from "../types.js";
 
 export interface WirePacket {
   kind: "value" | "data";
-  value?: number | Vec;
+  v?: number | Vec;
   type?: string;
   data?: unknown;
 }
@@ -14,7 +14,7 @@ export function serializePacket(packet: Packet): string {
 
   const wire: WirePacket =
     packet.kind === "value"
-      ? { kind: "value", value: packet.value }
+      ? { kind: "value", v: packet.v }
       : { kind: "data", type: packet.type, data: packet.value };
 
   return JSON.stringify(wire);
@@ -33,7 +33,7 @@ export function deserializePacket(raw: string): Packet {
   const wire = JSON.parse(raw) as WirePacket;
 
   if (wire.kind === "value") {
-    return { kind: "value", value: wire.value ?? 0 };
+    return { kind: "value", v: wire.v ?? 0 };
   }
 
   if (wire.kind === "data") {

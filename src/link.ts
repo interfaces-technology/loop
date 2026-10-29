@@ -8,9 +8,9 @@ export interface Pipeline {
   stop(): void;
 }
 
-export function pipe(...stages: Stage[]): Pipeline {
+export function link(...stages: Stage[]): Pipeline {
   if (stages.length < 1) {
-    throw new Error("pipe() requires at least one stage");
+    throw new Error("link() requires at least one stage");
   }
 
   for (let i = 0; i < stages.length - 1; i++) {
@@ -36,20 +36,20 @@ export function pipe(...stages: Stage[]): Pipeline {
 }
 
 export function connect(a: Stage, b: Stage): Pipeline {
-  return pipe(a, b);
+  return link(a, b);
 }
 
 export function runPipeline(stages: Stage[]): void {
   let packet: Packet | null = null;
 
   for (const stage of stages) {
-    if (stage.role === "source" && stage.read) {
-      packet = stage.read();
+    if (stage.role === "source" && stage.poll) {
+      packet = stage.poll();
       if (packet === null) return;
     } else if (stage.role === "transform" && stage.process && packet !== null) {
       packet = stage.process(packet);
-    } else if (stage.role === "sink" && stage.render && packet !== null) {
-      stage.render(packet);
+    } else if (stage.role === "sink" && stage.draw && packet !== null) {
+      stage.draw(packet);
     }
   }
 }

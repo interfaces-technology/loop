@@ -12,7 +12,7 @@ const connectedFor = new Set<string>();
 
 export function registerSink(name: string, def: RegisteredSink): () => void {
   if (!name.trim()) throw new Error("registerSink requires a name");
-  if (!def.render) throw new Error(`registerSink("${name}") requires a render function`);
+  if (!def.draw) throw new Error(`registerSink("${name}") requires a draw function`);
   registry.set(name, def);
   outputCache.delete(name);
   return () => registry.delete(name);
@@ -48,17 +48,17 @@ export function output(name: string): Stage {
     const known = listSinks().length > 0 ? listSinks().join(", ") : "(none registered)";
     throw new Error(
       `Output "${name}" has no sink adapter. Register one with loop.registerSink(` +
-        `"${name}", { accepts, render }). Registered sinks: ${known}`,
+        `"${name}", { in, draw }). Registered sinks: ${known}`,
     );
   }
 
   const stage = sink({
     to: name,
-    accepts: def.accepts,
+    in: def.in,
     dataType: def.dataType,
-    render(packet: Packet) {
+    draw(packet: Packet) {
       ensureConnected(name);
-      def.render(packet);
+      def.draw(packet);
     },
   });
 
@@ -68,11 +68,11 @@ export function output(name: string): Stage {
 
 registerSink("log", {
   to: "log",
-  accepts: ["value", "frame", "data"],
-  render(packet) {
+  in: ["value", "frame", "data"],
+  draw(packet) {
     switch (packet.kind) {
       case "value":
-        console.log("loop.log", packet.value);
+        console.log("loop.log", packet.v);
         break;
       case "data":
         console.log("loop.log", `[${packet.type}]`, packet.value);

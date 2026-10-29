@@ -8,10 +8,9 @@ import {
   type SinkDef,
   type ComponentDef,
 } from "./component.js";
-import { pipe, connect } from "./pipe.js";
+import { link, connect } from "./link.js";
 import { tick } from "./runtime.js";
 import { input, resolveInput, getSlidersInput } from "./input.js";
-import { toNumber, toText, clamp } from "./transforms.js";
 import { receipt } from "./devices/index.js";
 import { getDpadActiveDevice } from "./sources/dpad.js";
 import { getSlidersActiveDevice, setSlidersActiveDevice } from "./sources/gamepad.js";
@@ -35,7 +34,7 @@ const loop = {
   sink: (def: SinkDef) => sink(def),
   component: (def: ComponentDef) => component(def),
 
-  pipe,
+  link,
   connect,
 
   input,
@@ -53,16 +52,6 @@ const loop = {
   getSlidersActiveDevice,
   setSlidersActiveDevice,
 
-  recipes: {
-    toNumber,
-    toText,
-    clamp,
-  },
-
-  devices: {
-    receipt,
-  },
-
   relay: {
     room: relayRoom,
     online: relayOnline,
@@ -76,21 +65,18 @@ const loop = {
 export default loop;
 
 export type { SourceDef, TransformDef, SinkDef, ComponentDef } from "./component.js";
-export type { Pipeline } from "./pipe.js";
+export type { Pipeline } from "./link.js";
 export type { Handle } from "./handle.js";
 export type { Packet, Vec, Kind } from "./types.js";
 export type { Transport, TransportStatus } from "./transport/types.js";
 export type { RelayRoom } from "./relay.js";
 export type { RegisteredSink } from "./sink-registry.js";
-export type { ToTextOptions } from "./transforms.js";
-export type { ReceiptOptions, ReceiptPrinter } from "./devices/receipt.js";
-
 export {
   source,
   transform,
   sink,
   component,
-  pipe,
+  link,
   connect,
   input,
   output,
@@ -98,9 +84,5 @@ export {
   registerSink,
   hasSink,
   listSinks,
-  toNumber,
-  toText,
-  clamp,
-  receipt,
   relayOnline as online,
 };

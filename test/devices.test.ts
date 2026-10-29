@@ -4,20 +4,20 @@ import { receipt } from "../src/devices/receipt.js";
 import type { Packet } from "../src/types.js";
 
 describe("escpos", () => {
-  it("escposInit emits the initialize command", () => {
+  it("escposInit out the initialize command", () => {
     expect(Array.from(escposInit())).toEqual([ESC, 0x40]);
   });
 
-  it("escposCut emits full, then partial cut", () => {
+  it("escposCut out full, then partial cut", () => {
     expect(Array.from(escposCut("full"))).toEqual([GS, 0x56, 0x42, 0x00]);
     expect(Array.from(escposCut("partial"))).toEqual([GS, 0x56, 0x41, 0x00]);
   });
 
-  it("escposFeed emits n-line feed", () => {
+  it("escposFeed out n-line feed", () => {
     expect(Array.from(escposFeed(3))).toEqual([ESC, 0x64, 3]);
   });
 
-  it("escposText emits utf-8 bytes plus a line feed", () => {
+  it("escposText out utf-8 bytes plus a line feed", () => {
     const bytes = escposText("TV 13");
     const text = new TextDecoder().decode(bytes.subarray(0, bytes.length - 1));
     expect(text).toBe("TV 13");
@@ -49,48 +49,48 @@ describe("receipt printer", () => {
 
   it("buffers lines into a job and flushes on cut", () => {
     const printer = fresh();
-    printer.sink.render(text("hello"));
-    printer.sink.render(text("world"));
+    printer.sink.draw(text("hello"));
+    printer.sink.draw(text("world"));
     expect(printer.jobs).toEqual([]);
 
-    printer.sink.render(cut);
+    printer.sink.draw(cut);
     expect(printer.jobs).toEqual([["hello", "world"]]);
   });
 
   it("flushes on job-end as well", () => {
     const printer = fresh();
-    printer.sink.render(text("total: 12.50"));
-    printer.sink.render(jobEnd);
+    printer.sink.draw(text("total: 12.50"));
+    printer.sink.draw(jobEnd);
     expect(printer.jobs).toEqual([["total: 12.50"]]);
   });
 
-  it("accepts number data as lines", () => {
+  it("in number data as lines", () => {
     const printer = fresh();
-    printer.sink.render({ kind: "data", type: "number", value: 42 });
-    printer.sink.render(cut);
+    printer.sink.draw({ kind: "data", type: "number", value: 42 });
+    printer.sink.draw(cut);
     expect(printer.jobs).toEqual([["42"]]);
   });
 
   it("ignores untagged and frame packets", () => {
     const printer = fresh();
-    printer.sink.render({ kind: "value", value: 0.5 });
-    printer.sink.render(cut);
+    printer.sink.draw({ kind: "value", v: 0.5 });
+    printer.sink.draw(cut);
     expect(printer.jobs).toEqual([]);
   });
 
   it("keeps multiple jobs in order", () => {
     const printer = fresh();
-    printer.sink.render(text("one"));
-    printer.sink.render(cut);
-    printer.sink.render(text("two"));
-    printer.sink.render(cut);
+    printer.sink.draw(text("one"));
+    printer.sink.draw(cut);
+    printer.sink.draw(text("two"));
+    printer.sink.draw(cut);
     expect(printer.jobs).toEqual([["one"], ["two"]]);
   });
 
   it("clear() resets captured jobs", () => {
     const printer = fresh();
-    printer.sink.render(text("x"));
-    printer.sink.render(cut);
+    printer.sink.draw(text("x"));
+    printer.sink.draw(cut);
     printer.clear();
     expect(printer.jobs).toEqual([]);
   });
@@ -98,8 +98,8 @@ describe("receipt printer", () => {
   it("encodes finished jobs through onJob", () => {
     const seen: Uint8Array[] = [];
     const printer = receipt({ onJob: (bytes) => seen.push(bytes) });
-    printer.sink.render(text("hey"));
-    printer.sink.render(cut);
+    printer.sink.draw(text("hey"));
+    printer.sink.draw(cut);
     expect(seen).toHaveLength(1);
     expect(new TextDecoder().decode(seen[0])).toContain("hey");
   });
@@ -110,7 +110,7 @@ describe("receipt printer", () => {
     expect(custom).not.toBe(receipt());
   });
 
-  it("declares the accepted data type so pipe type-checking matches", () => {
+  it("declares the accepted data type so link type-checking matches", () => {
     expect(receipt().sink.dataType).toBe("text");
   });
 });

@@ -89,8 +89,8 @@ export function getSlidersActiveDevice(): string {
   return activeDevice;
 }
 
-export function slidersSourceRead(axis: "x" | "y" | "rotation"): Packet | null {
+export function slidersSourcePoll(axis: "x" | "y" | "rotation"): Packet | null {
   const sliders = getSlidersInput();
   const value = sliders[axis].value;
-  return { kind: "value", value };
+  return { kind: "value", v: value };
 }
