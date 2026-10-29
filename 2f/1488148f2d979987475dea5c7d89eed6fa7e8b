@@ -1,0 +1,67 @@
+src/sources/keyboard.ts
+  s_f08e5c69c78b03::t_1b1bd35c316f60 29
+src/types.ts
+  s_f08e5c69c78b03::t_a8824ddd97d806 4
+test/cross-device.integration.test.ts
+  s_f08e5c69c78b03::t_43e256a2b81851 21,24,29-32,39,42-43,45,48-49,52-54,63,65
+test/devices.test.ts
+  s_f08e5c69c78b03::t_7b91b8fb38b6eb 7,11,16,20,52-53,56,62-63,67,69-70,76-77,83-86,92-93,101-102,113
+package-lock.json
+  s_f08e5c69c78b03::t_274fb71b8e38a4 3,9
+src/sources/gamepad.ts
+  s_f08e5c69c78b03::t_47559d327c8dd9 92,95
+src/sink-registry.ts
+  s_f08e5c69c78b03::t_4150b3bdef26fa 15,51,57,59,61,71-72,75
+src/index.ts
+  s_f08e5c69c78b03::t_bb13f3ad31fe32 11,37,68,79
+src/transport/serialize.ts
+  s_f08e5c69c78b03::t_aaace781f91f58 5,17,36
+CHANGELOG.md
+  s_f08e5c69c78b03::t_5925eaed32f85c 1-14
+test/sink-registry.test.ts
+  s_f08e5c69c78b03::t_55c3e575ef4900 3,14-15,23,27-29,33-34,37,47,55,57,69,75,77
+test/kit.test.ts
+  s_f08e5c69c78b03::t_e1cf6382294874 168
+src/sources/dpad.ts
+  s_f08e5c69c78b03::t_578fa713ca8fba 111,113
+src/component.ts
+  s_f08e5c69c78b03::t_7b5725e0232826 5,7,11-12,14,20,22,30-31,33-34,36,39-40,47,49,57-58,60,69,71,76,82,85,88-90,93-94,98-99,109,113,116
+test/relay.test.ts
+  s_f08e5c69c78b03::t_0982dcc9630802 3,11,16,31,56,59-60,62,68,70-71,73,79-82,87,90-91,93,97-98,101-103
+src/relay.ts
+  s_f08e5c69c78b03::t_b8fe1c9faf2caa 17-18,74,76,85,87,99,131
+src/devices/receipt.ts
+  s_f08e5c69c78b03::t_9f4f3578ae74c1 74,110
+test/pipe.test.ts
+  s_f08e5c69c78b03::t_82f7bddeff9140 3,6,10-11,15-16,18-19,26-27,30,32,36,39,42-43,48-49,52,55,58,60,65,67,70,76,78,82-83,94,96,99-100
+src/transforms.ts
+  s_f08e5c69c78b03::t_ba1cfec1121376 19-21,35-37,50-51,54-55,57
+package.json
+  s_f08e5c69c78b03::t_b2fe02588690b9 3-4,11,14-21,41
+src/runtime.ts
+  s_f08e5c69c78b03::t_b74c3308a51112 1-2
+src/link.ts
+  s_f08e5c69c78b03::t_78b8e18424b686 11,13,39,46-47,51-52
+src/recipes.ts
+  s_f08e5c69c78b03::t_aa50d1786e6a35 1-2
+test/transforms.test.ts
+  s_f08e5c69c78b03::t_2513f8f30b1c9a 28,66-68,72,74
+.gitignore
+  s_f08e5c69c78b03::t_b65dd9d82f49a6 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2f1488148f2d979987475dea5c7d89eed6fa7e8b",
+  "prompts": {},
+  "sessions": {
+    "s_f08e5c69c78b03": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_f08e5c69c78b03",
+        "model": "unknown"
+      },
+      "human_author": "Hamza <125047677+HShaebi11@users.noreply.github.com>"
+    }
+  }
+}
