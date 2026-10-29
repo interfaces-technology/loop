@@ -18,40 +18,40 @@ describe("cross-device integration", () => {
     await display.connect();
 
     const remote = display.subscribe({ x: 0, y: 0 });
-    controller.publish(() => ({ kind: "value", value: { x: 1, y: 0 } }));
+    controller.publish(() => ({ kind: "value", v: { x: 1, y: 0 } }));
 
     // Simulate one tick cycle
-    transport.send({ kind: "value", value: { x: 1, y: 0 } });
+    transport.send({ kind: "value", v: { x: 1, y: 0 } });
 
     expect(remote.value).toEqual({ x: 1, y: 0 });
   });
 
-  it("full pipe relay: source → outbound → inbound → sink", async () => {
-    const transport = loop.relay.memoryTransport("pipe-live");
-    const sender = loop.relay.room("pipe-live", transport);
-    const receiver = loop.relay.room("pipe-live", transport);
+  it("full link relay: source → outbound → inbound → sink", async () => {
+    const transport = loop.relay.memoryTransport("link-live");
+    const sender = loop.relay.room("link-live", transport);
+    const receiver = loop.relay.room("link-live", transport);
 
     await sender.connect();
     await receiver.connect();
 
     const results: unknown[] = [];
 
-    const outbound = loop.pipe(
+    const outbound = loop.link(
       loop.source({
         from: "dpad",
-        emits: "value",
-        read: () => ({ kind: "value", value: { x: 0, y: -1 } }),
+        out: "value",
+        poll: () => ({ kind: "value", v: { x: 0, y: -1 } }),
       }),
-      sender.outbound({ accepts: "value" }),
+      sender.outbound({ in: "value" }),
     );
 
-    const inbound = loop.pipe(
-      receiver.inbound({ emits: "value" }),
+    const inbound = loop.link(
+      receiver.inbound({ out: "value" }),
       loop.sink({
         to: "square",
-        accepts: "value",
-        render: (packet) => {
-          if (packet.kind === "value") results.push(packet.value);
+        in: "value",
+        draw: (packet) => {
+          if (packet.kind === "value") results.push(packet.v);
         },
       }),
     );
@@ -60,9 +60,9 @@ describe("cross-device integration", () => {
     inbound.start();
 
     // Run one publish cycle manually since memory transport is synchronous
-    transport.send({ kind: "value", value: { x: 0, y: -1 } });
+    transport.send({ kind: "value", v: { x: 0, y: -1 } });
 
-    const { runPipeline } = await import("../src/pipe.js");
+    const { runPipeline } = await import("../src/link.js");
     runPipeline(inbound.stages);
 
     expect(results[0]).toEqual({ x: 0, y: -1 });

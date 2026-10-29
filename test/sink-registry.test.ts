@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { registerSink, listSinks, output, hasSink, ensureConnected } from "../src/sink-registry.js";
-import { runPipeline } from "../src/pipe.js";
+import { runPipeline } from "../src/link.js";
 import { source } from "../src/component.js";
 
 describe("sink registry", () => {
@@ -11,8 +11,8 @@ describe("sink registry", () => {
   it("registers a sink and exposes it in listSinks", () => {
     const unregister = registerSink("light", {
       to: "light",
-      accepts: "value",
-      render: () => {},
+      in: "value",
+      draw: () => {},
     });
     expect(hasSink("light")).toBe(true);
     expect(listSinks()).toContain("light");
@@ -20,21 +20,21 @@ describe("sink registry", () => {
     expect(hasSink("light")).toBe(false);
   });
 
-  it("output() delivers packets to a registered sink through a pipe", () => {
+  it("output() delivers packets to a registered sink through a link", () => {
     const received: number[] = [];
     registerSink("light", {
       to: "light",
-      accepts: "value",
-      render: (p) => {
-        if (p.kind === "value" && typeof p.value === "number") received.push(p.value);
+      in: "value",
+      draw: (p) => {
+        if (p.kind === "value" && typeof p.v === "number") received.push(p.v);
       },
     });
 
-    const pipe = [
-      source({ from: "test", emits: "value", read: () => ({ kind: "value", value: 0.5 }) }),
+    const link = [
+      source({ from: "test", out: "value", poll: () => ({ kind: "value", v: 0.5 }) }),
       output("light"),
     ];
-    runPipeline(pipe);
+    runPipeline(link);
 
     expect(received).toEqual([0.5]);
   });
@@ -44,7 +44,7 @@ describe("sink registry", () => {
   });
 
   it("is idempotent — output() returns the same stage each call", () => {
-    registerSink("screen", { to: "screen", accepts: "value", render: () => {} });
+    registerSink("screen", { to: "screen", in: "value", draw: () => {} });
     expect(output("screen")).toBe(output("screen"));
   });
 
@@ -52,9 +52,9 @@ describe("sink registry", () => {
     const connect = vi.fn();
     registerSink("printer", {
       to: "printer",
-      accepts: "data",
+      in: "data",
       connect,
-      render: () => {},
+      draw: () => {},
     });
 
     ensureConnected("printer");
@@ -66,15 +66,15 @@ describe("sink registry", () => {
     expect(hasSink("log")).toBe(true);
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
     runPipeline([
-      source({ from: "t", emits: "value", read: () => ({ kind: "value", value: 0.25 }) }),
+      source({ from: "t", out: "value", poll: () => ({ kind: "value", v: 0.25 }) }),
       output("log"),
     ]);
     runPipeline([
       source({
         from: "t",
-        emits: "data",
+        out: "data",
         dataType: "text",
-        read: () => ({ kind: "data", type: "text", value: "hi" }),
+        poll: () => ({ kind: "data", type: "text", value: "hi" }),
       }),
       output("log"),
     ]);

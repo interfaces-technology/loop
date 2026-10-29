@@ -108,7 +108,7 @@ export function getDpadActiveDevice(): string {
   return activeDevice;
 }
 
-export function dpadSourceRead(): Packet | null {
+export function dpadSourcePoll(): Packet | null {
   const v = sampleDpad();
-  return { kind: "value", value: v };
+  return { kind: "value", v: v };
 }

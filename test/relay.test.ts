@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { source, sink } from "../src/component.js";
-import { pipe, runPipeline } from "../src/pipe.js";
+import { link, runPipeline } from "../src/link.js";
 import { createHandle } from "../src/handle.js";
 import { room, online, clearRelayRooms } from "../src/relay.js";
 import { memoryTransport, clearMemoryTransports } from "../src/transport/memory.js";
@@ -8,12 +8,12 @@ import { serializePacket, deserializePacket, payloadToJsonText } from "../src/tr
 
 describe("packet serialization", () => {
   it("round-trips value scalars", () => {
-    const packet = { kind: "value" as const, value: 0.75 };
+    const packet = { kind: "value" as const, v: 0.75 };
     expect(deserializePacket(serializePacket(packet))).toEqual(packet);
   });
 
   it("round-trips value vectors", () => {
-    const packet = { kind: "value" as const, value: { x: -1, y: 0.5 } };
+    const packet = { kind: "value" as const, v: { x: -1, y: 0.5 } };
     expect(deserializePacket(serializePacket(packet))).toEqual(packet);
   });
 
@@ -28,7 +28,7 @@ describe("packet serialization", () => {
   });
 
   it("decodes ArrayBuffer and typed-array payloads as JSON text", () => {
-    const packet = { kind: "value" as const, value: { x: 1, y: -0.5 } };
+    const packet = { kind: "value" as const, v: { x: 1, y: -0.5 } };
     const json = serializePacket(packet);
     const bytes = new TextEncoder().encode(json);
 
@@ -53,54 +53,54 @@ describe("cross-device relay", () => {
 
     const results: unknown[] = [];
 
-    const pipeline = pipe(
+    const pipeline = link(
       source({
         from: "test",
-        emits: "value",
-        read: () => ({ kind: "value", value: { x: 1, y: -1 } }),
+        out: "value",
+        poll: () => ({ kind: "value", v: { x: 1, y: -1 } }),
       }),
-      sender.outbound({ accepts: "value" }),
+      sender.outbound({ in: "value" }),
     );
 
     runPipeline(pipeline.stages);
 
     receiver.subscribe({ x: 0, y: 0 });
-    transport.send({ kind: "value", value: { x: 1, y: -1 } });
+    transport.send({ kind: "value", v: { x: 1, y: -1 } });
 
-    const inbound = receiver.inbound({ emits: "value" });
-    const packet = inbound.read?.();
+    const inbound = receiver.inbound({ out: "value" });
+    const packet = inbound.poll?.();
     if (packet?.kind === "value") {
-      results.push(packet.value);
+      results.push(packet.v);
     }
 
     expect(results[0]).toEqual({ x: 1, y: -1 });
   });
 
-  it("wires outbound and inbound stages through pipe type-checking", async () => {
-    const transport = memoryTransport("pipe-demo");
-    const sender = room("pipe-demo", transport);
-    const receiver = room("pipe-demo", transport);
+  it("wires outbound and inbound stages through link type-checking", async () => {
+    const transport = memoryTransport("link-demo");
+    const sender = room("link-demo", transport);
+    const receiver = room("link-demo", transport);
 
     await sender.connect();
     await receiver.connect();
 
-    const outbound = pipe(
+    const outbound = link(
       source({
         from: "test",
-        emits: "value",
-        read: () => ({ kind: "value", value: 0.42 }),
+        out: "value",
+        poll: () => ({ kind: "value", v: 0.42 }),
       }),
-      sender.outbound({ accepts: "value" }),
+      sender.outbound({ in: "value" }),
     );
 
     const results: unknown[] = [];
-    const inbound = pipe(
-      receiver.inbound({ emits: "value" }),
+    const inbound = link(
+      receiver.inbound({ out: "value" }),
       sink({
         to: "log",
-        accepts: "value",
-        render: (p) => {
-          if (p.kind === "value") results.push(p.value);
+        in: "value",
+        draw: (p) => {
+          if (p.kind === "value") results.push(p.v);
         },
       }),
     );

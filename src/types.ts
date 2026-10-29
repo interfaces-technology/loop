@@ -1,7 +1,7 @@
 export type Vec = { x: number; y: number; z?: number };
 
 export type Packet =
-  | { kind: "value"; value: number | Vec }
+  | { kind: "value"; v: number | Vec }
   | { kind: "frame"; frame: ImageData }
   | { kind: "data"; type: string; value: unknown };
 

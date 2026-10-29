@@ -26,7 +26,7 @@ export function getKeyboardInput(): Handle<string> {
   return keyboardHandle;
 }
 
-export function keyboardSourceRead(): Packet | null {
+export function keyboardSourcePoll(): Packet | null {
   const handle = getKeyboardInput();
   return { kind: "data", type: "text", value: handle.value };
 }

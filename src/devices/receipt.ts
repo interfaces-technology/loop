@@ -71,7 +71,7 @@ function createPrinter(opts: ReceiptOptions): ReceiptPrinter {
 
   const sink: RegisteredSink = {
     to: "receipt",
-    accepts: "data",
+    in: "data",
     dataType: "text",
     async connect() {
       if (options.transport !== "serial") return;
@@ -107,7 +107,7 @@ function createPrinter(opts: ReceiptOptions): ReceiptPrinter {
       void serialWriter?.close().catch(() => {});
       serialWriter = null;
     },
-    render(packet) {
+    draw(packet) {
       if (packet.kind !== "data") return;
       if (packet.type === "cut" || packet.type === "job-end") {
         flushJob();

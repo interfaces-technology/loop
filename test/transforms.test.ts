@@ -25,7 +25,7 @@ describe("toNumber", () => {
   });
 
   it("passes value packets through untouched", () => {
-    const input = { kind: "value", value: 0.5 } as Packet;
+    const input = { kind: "value", v: 0.5 } as Packet;
     expect(def.process(input)).toBe(input);
   });
 });
@@ -63,15 +63,15 @@ describe("clamp", () => {
   const def = clamp(0.2, 0.8);
 
   it("clamps scalars into the range", () => {
-    expect(def.process({ kind: "value", value: 0.05 })).toEqual({ kind: "value", value: 0.2 });
-    expect(def.process({ kind: "value", value: 3 })).toEqual({ kind: "value", value: 0.8 });
-    expect(def.process({ kind: "value", value: 0.5 })).toEqual({ kind: "value", value: 0.5 });
+    expect(def.process({ kind: "value", v: 0.05 })).toEqual({ kind: "value", v: 0.2 });
+    expect(def.process({ kind: "value", v: 3 })).toEqual({ kind: "value", v: 0.8 });
+    expect(def.process({ kind: "value", v: 0.5 })).toEqual({ kind: "value", v: 0.5 });
   });
 
   it("clamps vectors per axis", () => {
-    expect(def.process({ kind: "value", value: { x: -1, y: 2, z: 0.4 } })).toEqual({
+    expect(def.process({ kind: "value", v: { x: -1, y: 2, z: 0.4 } })).toEqual({
       kind: "value",
-      value: { x: 0.2, y: 0.8, z: 0.4 },
+      v: { x: 0.2, y: 0.8, z: 0.4 },
     });
   });
 });
