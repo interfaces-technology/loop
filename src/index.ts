@@ -31,7 +31,7 @@ import {
   resetSlidersInput,
 } from "./sources/gamepad.js";
 import { resetKeyboardInput } from "./sources/keyboard.js";
-import { resetMidi } from "./sources/midi.js";
+import { initMidi, resetMidi } from "./sources/midi.js";
 import { room as relayRoom, clearRelayRooms } from "./relay.js";
 import { broadcastTransport } from "./transport/broadcast.js";
 import { websocketTransport } from "./transport/websocket.js";
@@ -52,6 +52,7 @@ const loop = {
 
   input,
   inputs,
+  initMidi,
   output,
   tick,
 
@@ -129,6 +130,7 @@ export {
   connect,
   input,
   inputs,
+  initMidi,
   output,
   registerInput,
   registerOutput,

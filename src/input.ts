@@ -4,7 +4,6 @@ import { sink, type Stage } from "./component.js";
 import { getKeyboardInput } from "./sources/keyboard.js";
 import { getDpadInput, getDpadDeviceSet } from "./sources/dpad.js";
 import { getSlidersInput, getSlidersDeviceSet, type SliderBundle } from "./sources/gamepad.js";
-import { initMidi } from "./sources/midi.js";
 import { getSmileInput } from "./sources/smile.js";
 import { layout } from "./layout.js";
 import {
@@ -31,11 +30,7 @@ const outputFactories = new Map<string, OutputFactory>();
 
 inputFactories.set("keyboard", getKeyboardInput);
 inputFactories.set("dpad", getDpadInput);
-inputFactories.set("sliders", () => {
-  const sliders = getSlidersInput();
-  initMidi();
-  return sliders;
-});
+inputFactories.set("sliders", getSlidersInput);
 inputFactories.set("smile", getSmileInput);
 
 outputFactories.set("receipt", () => layout("receipt"));
@@ -115,8 +110,6 @@ export function inputs(name: string): DeviceSet<unknown> {
     case "dpad":
       return getDpadDeviceSet();
     case "sliders":
-      getSlidersInput();
-      initMidi();
       return getSlidersDeviceSet();
     case "keyboard":
       keyboardDeviceSet ??= singleDeviceSet(
