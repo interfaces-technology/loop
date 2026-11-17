@@ -1,0 +1,21 @@
+src/relay.ts
+  s_8584652565d504::t_fb9677a69c45db 42,46,78-82,88-89
+test/relay.test.ts
+  s_8584652565d504::t_e897c596a525f8 128-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d1dbe6f191eb7a8f047f9fbbb4df8e24684ed7cd",
+  "prompts": {},
+  "sessions": {
+    "s_8584652565d504": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_8584652565d504",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
