@@ -1,0 +1,190 @@
+src/types.ts
+  s_2a88fb07582c36::t_474d8f1bc03753 3-28,30-32,34-36,40-64
+  s_2a88fb07582c36::t_3197abd541d30b 65
+src/index.ts
+  s_84aeebe9afd62b::t_237b63ebcf38a8 54,58-62
+  s_2a88fb07582c36::t_df24a8c33b31dc 14-16,18-24,27-34,38-42,63-70,78-81,90-96,98-103,110,113-114,117-119,133-137
+  s_84aeebe9afd62b::t_f6587b1c7bdf3e 120-121
+  s_84aeebe9afd62b::t_154080d1e7ebec 97,104
+  s_84aeebe9afd62b::t_6a7676497b1719 131
+  s_2a88fb07582c36::t_3fe0fcc1464c0c 11
+  s_2a88fb07582c36::t_620c9eb13faab1 45-47
+  s_84aeebe9afd62b::t_5e86cdf0e999a4 17,25-26
+  s_84aeebe9afd62b::t_b3ebb839cdb877 105
+test/relay.test.ts
+  s_2a88fb07582c36::t_fb9d0f646fe1fb 113-126
+.github/workflows/ci.yml
+  s_2a88fb07582c36::t_d88f286ff2f1e0 1-18
+test/handle.test.ts
+  s_2a88fb07582c36::t_7f7c9c0ba8d5fd 45-91
+src/runtime.ts
+  s_2a88fb07582c36::t_7681f09c66c283 5-19,21,25-28,45-49,58,66,77-81,85-93,98-102,104,112-117,129,142-145
+  s_2a88fb07582c36::t_388a27fb32a879 146
+src/sources/gamepads.ts
+  s_84aeebe9afd62b::t_81b9c013c9393a 1-66
+examples/07-multi-controller.html
+  s_433dd46d62ef6b::t_cb9cb0cc438119 1-289
+test/registry.test.ts
+  s_2a88fb07582c36::t_3cfc0e6c0a9cf7 1-59
+src/transport/serialize.ts
+  s_2a88fb07582c36::t_a456af532097e4 2-6,39-45,58-73,76-80,84-87,90
+  s_2a88fb07582c36::t_87a72e059a5239 7-20
+test/wire.test.ts
+  s_2a88fb07582c36::t_067588f6d9507b 1-65
+examples/04-cross-device-dpad.html
+  s_2a88fb07582c36::t_9d3b3f313c3595 388
+  s_2a88fb07582c36::t_d281e35f78d46b 606,608-610
+package.json
+  s_2a88fb07582c36::t_31ddb5a47c9c39 14,19-20,23
+test/operations.test.ts
+  s_2a88fb07582c36::t_c21cd9ee6334ba 1-28
+src/transport/websocket.ts
+  s_2a88fb07582c36::t_7aa980102b9311 5-7,17-20,28-63,66,72,77-84,86,88,93-96,100-101,103-105,107,113-118,130-134,137-149,152-157
+src/relay.ts
+  s_2a88fb07582c36::t_fb254ff92b8f65 89,100-105
+  s_2a88fb07582c36::t_159dd8bdb01cca 116
+  s_2a88fb07582c36::t_8ffff040e59f05 7
+src/transforms/smile-print.ts
+  s_2a88fb07582c36::t_f4f10030175e50 2-20
+  s_2a88fb07582c36::t_078933bbfae5df 1
+  s_2a88fb07582c36::t_6803be27850284 21-23
+  s_2a88fb07582c36::t_8b93fe3fe99286 24-43
+src/sources/dpad.ts
+  s_84aeebe9afd62b::t_cc491d1d0b77dc 207,217-224
+  s_84aeebe9afd62b::t_a2378188207ede 5-12,34-36,38-41,43-47,50,62-106,108,142-206,209-215
+  s_2a88fb07582c36::t_e454d3facf5dd0 208,216
+SPEC.md
+  s_2a88fb07582c36::t_8a123eba4d1fa1 141-144,147-149
+  s_2a88fb07582c36::t_dd44a9187a0a61 56-61
+  s_84aeebe9afd62b::t_1d09ff0dbbf64b 107-133,139-140,150-151
+  s_2a88fb07582c36::t_ca7970eb8e3a48 49-50
+  s_2a88fb07582c36::t_f2bad07b974537 83,88
+  s_2a88fb07582c36::t_032bb835636848 173-174,176-178
+  s_2a88fb07582c36::t_742e8a11bd7edf 22-23,29-35,37-40
+  s_84aeebe9afd62b::t_0548b71672386d 152
+  s_d8402bb3dfa249::t_55d660fa944fcf 3,160-161
+src/operations.ts
+  s_2a88fb07582c36::t_cc4af1c45262c7 1-32
+src/layout.ts
+  s_2a88fb07582c36::t_c8bd93e98ac4ed 3-37
+  s_2a88fb07582c36::t_fb4b4583861901 1-2
+src/input.ts
+  s_2a88fb07582c36::t_a3884d14e1d532 3,17,23-53,60,63-67,70-71,140,143-154,156,160-162
+  s_84aeebe9afd62b::t_bd7d3082e737b2 85-138,163
+  s_2a88fb07582c36::t_52e28d57bcf828 1
+  s_84aeebe9afd62b::t_3b138999a15108 5-6,8-15
+  s_84aeebe9afd62b::t_88f68a1f2fc5d0 164
+src/handle.ts
+  s_2a88fb07582c36::t_3d9a9571a5df84 3,12-14,16,24-38,57-68,71,73,85,87-93,96,98-102
+examples/02-dpad-square.html
+  s_2a88fb07582c36::t_deaaa0d5022da0 67,71,73-75
+src/component.ts
+  s_2a88fb07582c36::t_9395442e011923 60
+  s_2a88fb07582c36::t_b8f4a7c45edd93 1,3,5-7,10-14,17,19-21,31,41,47,51-53,64,70
+src/sources/keyboard.ts
+  s_2a88fb07582c36::t_8ee19088d86659 33-36
+test/runtime.test.ts
+  s_2a88fb07582c36::t_a4394312f981ce 1-48
+src/device.ts
+  s_84aeebe9afd62b::t_b090d4cb68862b 1-23,25,27-33,35-36,40,46,48-50,52-118,120-123,131-132,135,145-158,160-180
+  s_84aeebe9afd62b::t_4a577fd858ca8d 26
+  s_84aeebe9afd62b::t_d3c64d34eb02eb 119,124-130,133-134,136-144,159
+  s_84aeebe9afd62b::t_490b8eeb569332 34,37-39,41-45,47,51
+  s_84aeebe9afd62b::t_d4fab747c02c3c 24
+src/sources/midi.ts
+  s_84aeebe9afd62b::t_3fa03d4b923fa2 14
+  s_2a88fb07582c36::t_ac758e54cdfb0f 51-54
+  s_84aeebe9afd62b::t_26bb4b07741540 1
+  s_84aeebe9afd62b::t_64d6f096afa5d7 33-44
+README.md
+  s_2a88fb07582c36::t_a32b85124e1d17 53-54,56-57,60
+  s_2a88fb07582c36::t_cffd5eacbfbb4f 114-118
+  s_84aeebe9afd62b::t_8fecf61962f941 52,55,61-79,91,104
+  s_433dd46d62ef6b::t_67bad019058673 45
+  s_433dd46d62ef6b::t_de177c9ae04db7 42-44,80,83-90,92-103,105-109
+src/pipe.ts
+  s_2a88fb07582c36::t_071f843e1ebe01 29
+  s_2a88fb07582c36::t_fd0710a238c567 7
+src/sources/gamepad.ts
+  s_84aeebe9afd62b::t_ef4ccb6fb8f7ba 5-13,21-60,65,90,142-207,210-231
+  s_2a88fb07582c36::t_4b3a5106a6d152 209,232
+  s_84aeebe9afd62b::t_b3388d4b373130 208,233-240
+test/device.test.ts
+  s_84aeebe9afd62b::t_f283af2dd6fc1e 1-160
+.cursor/mcp.json
+  s_d8402bb3dfa249::t_1d9eda2008ae5d 1-11
+.gitignore
+  s_d8402bb3dfa249::t_71efc5f4305ad2 4-6
+examples/05-receipt-print.html
+  s_d8402bb3dfa249::t_70df53035b0040 1-181
+examples/06-smile-receipt.html
+  s_d8402bb3dfa249::t_5b08934940a40b 1-312
+packages/loop-mcp/package-lock.json
+  s_d8402bb3dfa249::t_b88978f264582d 1-1241
+packages/loop-mcp/package.json
+  s_d8402bb3dfa249::t_7c720844463528 1-31
+packages/loop-mcp/scripts/copy-docs.mjs
+  s_d8402bb3dfa249::t_6be061bada980f 1-26
+packages/loop-mcp/src/docs.ts
+  s_d8402bb3dfa249::t_d43dc847c56c90 1-85
+packages/loop-mcp/src/index.ts
+  s_d8402bb3dfa249::t_ae2199ea242fb2 1-93
+packages/loop-mcp/tsconfig.json
+  s_d8402bb3dfa249::t_09ddec8afc713e 1-17
+src/sinks/escpos.ts
+  s_d8402bb3dfa249::t_0a3c0296eb70ed 1-44
+src/sinks/receipt.ts
+  s_d8402bb3dfa249::t_6f0bdb08df10fb 1-133
+src/sources/smile.ts
+  s_d8402bb3dfa249::t_82538a771b807f 1-27
+test/escpos.test.ts
+  s_d8402bb3dfa249::t_7abbfef24a154d 1-38
+test/layout.test.ts
+  s_d8402bb3dfa249::t_87f48e66dbbd69 1-29
+test/receipt.test.ts
+  s_d8402bb3dfa249::t_b3891bb6521ab1 1-85
+test/smile-recipe.test.ts
+  s_d8402bb3dfa249::t_35bbe9d94976fc 1-57
+test/smile.test.ts
+  s_d8402bb3dfa249::t_6696d66b2f9078 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "abbaa8b5690b004aad2ba453a2c7f8af09ed9f1c",
+  "prompts": {},
+  "sessions": {
+    "s_2a88fb07582c36": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ec8ba344cffeZ9U5CPhJsoIO81",
+        "model": "big-pickle"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    },
+    "s_433dd46d62ef6b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ec8aaee5dffea70NAn9Q4Zagcg",
+        "model": "big-pickle"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    },
+    "s_84aeebe9afd62b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ec8b45211ffeu03tzCwhC5DEYd",
+        "model": "big-pickle"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    },
+    "s_d8402bb3dfa249": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_d8402bb3dfa249",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
