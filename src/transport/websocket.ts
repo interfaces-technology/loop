@@ -159,13 +159,21 @@ class WebSocketTransport implements Transport {
   }
 
   private dispatchPacket(raw: string): void {
+    let packet: Packet;
     try {
-      const packet = deserializePacket(raw);
-      for (const fn of this.packetListeners) {
-        fn(packet);
-      }
+      packet = deserializePacket(raw);
     } catch {
       // Ignore malformed packets.
+      return;
+    }
+    // A throwing listener must not starve the others or get eaten as a
+    // parse error — isolate each delivery.
+    for (const fn of this.packetListeners) {
+      try {
+        fn(packet);
+      } catch (err) {
+        console.error("[loop] websocket packet listener threw", err);
+      }
     }
   }
 

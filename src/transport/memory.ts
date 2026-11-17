@@ -38,7 +38,11 @@ class MemoryTransport implements Transport {
   send(packet: Packet): void {
     if (this.status !== "connected") return;
     for (const listener of this.listeners) {
-      listener(packet);
+      try {
+        listener(packet);
+      } catch (err) {
+        console.error("[loop] memory transport listener threw", err);
+      }
     }
   }
 

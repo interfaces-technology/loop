@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { source, sink } from "../src/component.js";
 import { pipe, runPipeline } from "../src/pipe.js";
 import { room, clearRelayRooms } from "../src/relay.js";
@@ -123,5 +123,24 @@ describe("cross-device relay", () => {
     remote.dispose();
     transport.send({ kind: "value", value: { x: 2, y: 2 } });
     expect(remote.value).toEqual({ x: 1, y: 1 });
+  });
+
+  it("isolates packet listener errors so remaining listeners still receive", async () => {
+    const transport = memoryTransport("listener-demo");
+    await transport.connect();
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const received: unknown[] = [];
+
+    transport.onPacket(() => {
+      throw new Error("listener boom");
+    });
+    transport.onPacket((packet) => received.push(packet));
+
+    transport.send({ kind: "value", value: 1 });
+
+    expect(received).toEqual([{ kind: "value", value: 1 }]);
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });
