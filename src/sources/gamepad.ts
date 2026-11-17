@@ -9,6 +9,7 @@ import {
   type DeviceEntry,
   type DeviceSet,
   type GamepadInfo,
+  gamepadSnapshot,
 } from "../device.js";
 import { onGamepads } from "./gamepads.js";
 
@@ -21,8 +22,7 @@ export interface SliderBundle {
 type Triple = { x: number; y: number; rotation: number };
 
 function readPad(index: number): Triple | null {
-  if (typeof navigator === "undefined" || !navigator.getGamepads) return null;
-  const gp = navigator.getGamepads()[index];
+  const gp = gamepadSnapshot()[index];
   if (!gp) return null;
 
   const lx = gp.axes[0] ?? 0;
@@ -62,9 +62,7 @@ let bundle: SliderBundle | null = null;
 let activeDevice = "on-screen";
 
 function pollGamepad(): Triple | null {
-  if (typeof navigator === "undefined" || !navigator.getGamepads) return null;
-
-  const gamepads = navigator.getGamepads();
+  const gamepads = gamepadSnapshot();
   for (const gp of gamepads) {
     if (!gp) continue;
 

@@ -8,6 +8,7 @@ import {
   type DeviceEntry,
   type DeviceSet,
   type GamepadInfo,
+  gamepadSnapshot,
 } from "../device.js";
 import { onGamepads } from "./gamepads.js";
 
@@ -85,8 +86,7 @@ function readKeyboardDpad(): Vec {
 }
 
 function readPadDpad(index: number): Vec {
-  if (typeof navigator === "undefined" || !navigator.getGamepads) return ZERO;
-  const gp = navigator.getGamepads()[index];
+  const gp = gamepadSnapshot()[index];
   if (!gp) return ZERO;
 
   let x = 0;
@@ -109,9 +109,7 @@ let dpadHandle: Handle<Vec> | null = null;
 let activeDevice = "none";
 
 function pollGamepadDpad(): Vec {
-  if (typeof navigator === "undefined" || !navigator.getGamepads) return ZERO;
-
-  const gamepads = navigator.getGamepads();
+  const gamepads = gamepadSnapshot();
   for (const gp of gamepads) {
     if (!gp) continue;
     const v = readPadDpad(gp.index);

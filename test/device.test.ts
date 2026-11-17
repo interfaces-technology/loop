@@ -3,6 +3,7 @@ import {
   createDeviceSet,
   getDeviceRegistry,
   resetDeviceRegistry,
+  clearGamepadSnapshot,
   type DeviceEntry,
 } from "../src/device.js";
 import {
@@ -37,6 +38,7 @@ function installGamepads(pads: unknown[]): void {
     configurable: true,
     writable: true,
   });
+  clearGamepadSnapshot();
 }
 
 function tickTriple(bundle: { x: { _tick(): void }; y: { _tick(): void }; rotation: { _tick(): void } }) {

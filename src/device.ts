@@ -167,11 +167,34 @@ export interface GamepadInfo {
   id: string;
 }
 
+// `navigator.getGamepads()` is called once per runtime tick and shared by
+// every lane sampler — the runtime's frame callback is one synchronous
+// block, so a microtask boundary is exactly a tick boundary.
+let padSnapshot: (Gamepad | null)[] | null = null;
+
+/** Raw gamepad list, cached for the duration of the current tick. */
+export function gamepadSnapshot(): (Gamepad | null)[] {
+  if (!padSnapshot) {
+    padSnapshot =
+      typeof navigator !== "undefined" && navigator.getGamepads
+        ? [...navigator.getGamepads()]
+        : [];
+    queueMicrotask(() => {
+      padSnapshot = null;
+    });
+  }
+  return padSnapshot;
+}
+
+/** Test seam: drop the cached snapshot. */
+export function clearGamepadSnapshot(): void {
+  padSnapshot = null;
+}
+
 /** Snapshot the browser's connected gamepads, skipping empty slots. */
 export function scanGamepads(): GamepadInfo[] {
-  if (typeof navigator === "undefined" || !navigator.getGamepads) return [];
   const out: GamepadInfo[] = [];
-  for (const gp of navigator.getGamepads()) {
+  for (const gp of gamepadSnapshot()) {
     if (gp) out.push({ index: gp.index, id: gp.id });
   }
   return out;
