@@ -1,0 +1,21 @@
+src/sources/midi.ts
+  s_5e0913a02d3e9b::t_e5766173596835 4-5,13,16-18,59,61-66
+test/midi.test.ts
+  s_5e0913a02d3e9b::t_6ad739ed4e6aee 1-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "72a6c61c2daa973bfc25ff736d7f4a93a9c0f35e",
+  "prompts": {},
+  "sessions": {
+    "s_5e0913a02d3e9b": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_5e0913a02d3e9b",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
