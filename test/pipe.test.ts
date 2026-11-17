@@ -144,3 +144,22 @@ describe("runtime kind validation", () => {
     warn.mockRestore();
   });
 });
+
+describe("degenerate pipelines", () => {
+  it("warns when a pipeline has no source or no sink", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const xf = transform({ accepts: "value", emits: "value", process: (p) => p });
+    const snk = sink({ to: "s", accepts: "value", render: () => {} });
+    const src = source({ from: "s", emits: "value", read: () => null });
+
+    pipe(xf);
+    pipe(snk);
+    pipe(src);
+    expect(warn).toHaveBeenCalledTimes(3);
+
+    warn.mockClear();
+    pipe(src, xf, snk);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});

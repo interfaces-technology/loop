@@ -20,6 +20,14 @@ export function pipe(...stages: Stage[]): Pipeline {
     checkAdjacent(current, next);
   }
 
+  const hasSource = stages.some((s) => s?.role === "source");
+  const hasSink = stages.some((s) => s?.role === "sink");
+  if (!hasSource || !hasSink) {
+    console.warn(
+      `[loop] pipe() has no ${!hasSource ? "source" : "sink"} stage; packets will never flow through it.`,
+    );
+  }
+
   const runtime = getRuntime();
 
   const pipeline: Pipeline = {
