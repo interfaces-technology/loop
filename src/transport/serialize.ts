@@ -4,6 +4,23 @@ import { isVec } from "../types.js";
 /** Upper bound on a single relayed packet, in UTF-8 bytes. */
 export const MAX_WIRE_BYTES = 64 * 1024;
 
+const encoder = new TextEncoder();
+
+/** UTF-8 byte length. Always >= UTF-16 length, so length checks short-circuit. */
+function utf8Bytes(text: string): number {
+  return encoder.encode(text).length;
+}
+
+const warned = new Set<string>();
+
+function warnOnce(reason: string, message: string): void {
+  if (warned.has(reason)) return;
+  warned.add(reason);
+  console.warn(`[loop] ${message}`);
+}
+
+let unserializableKey = 0;
+
 /**
  * Cheap, allocation-light signature used to skip resending an unchanged packet.
  * Value packets avoid JSON entirely; only `data` falls back to stringification.
@@ -14,7 +31,14 @@ export function packetKey(packet: Packet): string {
     return typeof v === "number" ? `v:${v}` : `v:${v.x},${v.y},${v.z ?? 0}`;
   }
   if (packet.kind === "data") {
-    return `d:${packet.type}:${typeof packet.value === "string" ? packet.value : JSON.stringify(packet.value)}`;
+    const v = packet.value;
+    if (typeof v === "string") return `d:${packet.type}:${v}`;
+    try {
+      return `d:${packet.type}:${JSON.stringify(v)}`;
+    } catch {
+      // Unserializable values can't be deduped safely — force a send each tick.
+      return `d:${packet.type}:!${unserializableKey++}`;
+    }
   }
   return "f";
 }
@@ -26,9 +50,15 @@ export interface WirePacket {
   data?: unknown;
 }
 
-export function serializePacket(packet: Packet): string {
+/**
+ * Serialize a packet for the wire, or return `null` when it must be dropped:
+ * `frame` packets are not relayed in v0.1, and oversized or unserializable
+ * payloads exceed the wire contract. Drops are warned about once per reason.
+ */
+export function serializePacket(packet: Packet): string | null {
   if (packet.kind === "frame") {
-    throw new Error("Frame packets cannot be relayed yet (coming in a later slice)");
+    warnOnce("frame", "Frame packets cannot be relayed yet; dropping.");
+    return null;
   }
 
   const wire: WirePacket =
@@ -36,11 +66,22 @@ export function serializePacket(packet: Packet): string {
       ? { kind: "value", value: packet.value }
       : { kind: "data", type: packet.type, data: packet.value };
 
-  const json = JSON.stringify(wire);
-  if (json.length > MAX_WIRE_BYTES) {
-    throw new Error(
-      `Packet exceeds the ${MAX_WIRE_BYTES}-byte wire limit (${json.length} bytes)`,
+  let json: string;
+  try {
+    json = JSON.stringify(wire);
+  } catch {
+    warnOnce("unserializable", "Packet value is not JSON-serializable; dropping.");
+    return null;
+  }
+
+  // UTF-8 bytes are always >= UTF-16 length, so an over-limit length already
+  // proves the packet is oversized without paying for the encode.
+  if (json.length > MAX_WIRE_BYTES || utf8Bytes(json) > MAX_WIRE_BYTES) {
+    warnOnce(
+      "oversize",
+      `Packet exceeds the ${MAX_WIRE_BYTES}-byte wire limit; dropping.`,
     );
+    return null;
   }
   return json;
 }
@@ -55,7 +96,8 @@ export function payloadToJsonText(data: unknown): string {
 }
 
 export function deserializePacket(raw: string): Packet {
-  if (raw.length > MAX_WIRE_BYTES) {
+  // Same short-circuit as serialize: length alone can prove oversize.
+  if (raw.length > MAX_WIRE_BYTES || utf8Bytes(raw) > MAX_WIRE_BYTES) {
     throw new Error(`Packet exceeds the ${MAX_WIRE_BYTES}-byte wire limit`);
   }
 

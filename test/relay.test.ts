@@ -9,27 +9,27 @@ import { serializePacket, deserializePacket, payloadToJsonText } from "../src/tr
 describe("packet serialization", () => {
   it("round-trips value scalars", () => {
     const packet = { kind: "value" as const, value: 0.75 };
-    expect(deserializePacket(serializePacket(packet))).toEqual(packet);
+    expect(deserializePacket(serializePacket(packet)!)).toEqual(packet);
   });
 
   it("round-trips value vectors", () => {
     const packet = { kind: "value" as const, value: { x: -1, y: 0.5 } };
-    expect(deserializePacket(serializePacket(packet))).toEqual(packet);
+    expect(deserializePacket(serializePacket(packet)!)).toEqual(packet);
   });
 
   it("round-trips data packets", () => {
     const packet = { kind: "data" as const, type: "text", value: "hello" };
-    expect(deserializePacket(serializePacket(packet))).toEqual(packet);
+    expect(deserializePacket(serializePacket(packet)!)).toEqual(packet);
   });
 
-  it("rejects frame packets", () => {
+  it("drops frame packets", () => {
     const frame = { width: 1, height: 1, data: new Uint8ClampedArray(4) } as ImageData;
-    expect(() => serializePacket({ kind: "frame", frame })).toThrow(/cannot be relayed/);
+    expect(serializePacket({ kind: "frame", frame })).toBeNull();
   });
 
   it("decodes ArrayBuffer and typed-array payloads as JSON text", () => {
     const packet = { kind: "value" as const, value: { x: 1, y: -0.5 } };
-    const json = serializePacket(packet);
+    const json = serializePacket(packet)!;
     const bytes = new TextEncoder().encode(json);
 
     expect(deserializePacket(payloadToJsonText(bytes.buffer))).toEqual(packet);

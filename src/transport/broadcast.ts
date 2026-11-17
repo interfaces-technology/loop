@@ -47,7 +47,9 @@ class BroadcastChannelTransport implements Transport {
 
   send(packet: Packet): void {
     if (!this.channel || this.status !== "connected") return;
-    this.channel.postMessage(serializePacket(packet));
+    const text = serializePacket(packet);
+    if (text === null) return;
+    this.channel.postMessage(text);
   }
 
   onPacket(fn: (packet: Packet) => void): () => void {

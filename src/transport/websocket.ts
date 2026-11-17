@@ -42,6 +42,7 @@ class WebSocketTransport implements Transport {
 
   send(packet: Packet): void {
     const text = serializePacket(packet);
+    if (text === null) return;
     if (this.socket && this.status === "connected" && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(text);
       return;
