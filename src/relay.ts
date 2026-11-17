@@ -8,6 +8,7 @@ import { packetKey } from "./transport/serialize.js";
 import type { Transport, TransportStatus } from "./transport/types.js";
 
 const roomRegistry = new Map<string, RelayRoom>();
+const warnedTransportMismatch = new Set<string>();
 
 export interface RelayRoom {
   readonly code: string;
@@ -23,7 +24,19 @@ export interface RelayRoom {
 
 export function room(code: string, transport?: Transport): RelayRoom {
   const existing = roomRegistry.get(code);
-  if (existing) return existing;
+  if (existing) {
+    if (
+      transport !== undefined &&
+      transport !== existing.transport &&
+      !warnedTransportMismatch.has(code)
+    ) {
+      warnedTransportMismatch.add(code);
+      console.warn(
+        `[loop] relay room "${code}" is already connected on a different transport; the new transport was ignored.`,
+      );
+    }
+    return existing;
+  }
 
   const relayRoom = createRelayRoom(code, transport ?? broadcastTransport(code));
   roomRegistry.set(code, relayRoom);
@@ -35,6 +48,7 @@ export function clearRelayRooms(): void {
     relayRoom.disconnect();
   }
   roomRegistry.clear();
+  warnedTransportMismatch.clear();
 }
 
 function createRelayRoom(code: string, transport: Transport): RelayRoom {
@@ -60,6 +74,7 @@ function createRelayRoom(code: string, transport: Transport): RelayRoom {
       unsubPacket();
       transport.disconnect();
       roomRegistry.delete(code);
+      warnedTransportMismatch.delete(code);
       connected = false;
     },
 

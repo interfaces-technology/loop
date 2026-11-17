@@ -150,6 +150,22 @@ describe("cross-device relay", () => {
     expect(inbound.read?.()).toBeNull();
   });
 
+  it("warns once when room() is called with a different transport", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const t1 = memoryTransport("t1");
+    const t2 = memoryTransport("t2");
+
+    const r1 = room("shared", t1);
+    expect(room("shared", t1)).toBe(r1);
+    expect(warnSpy).not.toHaveBeenCalled();
+
+    expect(room("shared", t2)).toBe(r1);
+    expect(room("shared", t2)).toBe(r1);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('"shared"'));
+    warnSpy.mockRestore();
+  });
+
   it("isolates packet listener errors so remaining listeners still receive", async () => {
     const transport = memoryTransport("listener-demo");
     await transport.connect();
