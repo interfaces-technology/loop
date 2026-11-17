@@ -31,11 +31,26 @@ const KEY_MAP: Record<string, { x?: number; y?: number }> = {
 let keysDown = new Set<string>();
 let listenersAttached = false;
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (typeof HTMLElement === "undefined" || !(target instanceof HTMLElement)) {
+    return false;
+  }
+  const el = target as HTMLElement;
+  if (el.isContentEditable) return true;
+  const tag = el.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
+
 function attachDpadListeners(): void {
   if (listenersAttached || typeof document === "undefined") return;
   listenersAttached = true;
 
+  const clearKeys = () => {
+    keysDown = new Set();
+  };
+
   document.addEventListener("keydown", (e) => {
+    if (isEditableTarget(e.target)) return;
     if (KEY_MAP[e.key]) {
       keysDown.add(e.key);
       e.preventDefault();
@@ -44,6 +59,13 @@ function attachDpadListeners(): void {
 
   document.addEventListener("keyup", (e) => {
     keysDown.delete(e.key);
+  });
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("blur", clearKeys);
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) clearKeys();
   });
 }
 

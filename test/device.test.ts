@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   createDeviceSet,
   getDeviceRegistry,
@@ -176,5 +176,52 @@ describe("device-separated gamepad sliders", () => {
 
     expect(padA.value).toEqual({ x: 1, y: 0 });
     expect(padB.value).toEqual({ x: 0, y: -1 });
+  });
+});
+
+describe("dpad keyboard listeners", () => {
+  afterEach(() => {
+    resetDpadInput();
+    resetRuntime();
+    vi.unstubAllGlobals();
+  });
+
+  it("ignores editable targets and clears pressed keys on blur", () => {
+    class El {}
+    class InputEl extends El {
+      tagName = "INPUT";
+    }
+    const docListeners = new Map<string, (e: never) => void>();
+    const winListeners = new Map<string, () => void>();
+    vi.stubGlobal("document", {
+      hidden: false,
+      addEventListener: (t: string, fn: never) => docListeners.set(t, fn),
+    });
+    vi.stubGlobal("window", {
+      addEventListener: (t: string, fn: never) => winListeners.set(t, fn),
+    });
+    vi.stubGlobal("HTMLElement", El);
+
+    const kb = getDpadDeviceSet().get("keyboard")!;
+    kb._tick();
+    expect(kb.value).toEqual({ x: 0, y: 0 });
+
+    const pd = vi.fn();
+    const keydown = docListeners.get("keydown")!;
+    // Typing into a field must not move the d-pad or eat the keystroke.
+    keydown({ key: "w", target: new InputEl(), preventDefault: pd } as never);
+    expect(pd).not.toHaveBeenCalled();
+    kb._tick();
+    expect(kb.value).toEqual({ x: 0, y: 0 });
+
+    keydown({ key: "w", target: new El(), preventDefault: pd } as never);
+    expect(pd).toHaveBeenCalled();
+    kb._tick();
+    expect(kb.value).toEqual({ x: 0, y: -1 });
+
+    // Window blur must not leave keys stuck down.
+    winListeners.get("blur")!();
+    kb._tick();
+    expect(kb.value).toEqual({ x: 0, y: 0 });
   });
 });
