@@ -60,7 +60,6 @@ function createBundle(initial: Triple, sample?: () => Triple): SliderBundle {
 
 let bundle: SliderBundle | null = null;
 let activeDevice = "on-screen";
-let gamepadConnected = false;
 
 function pollGamepad(): Triple | null {
   if (typeof navigator === "undefined" || !navigator.getGamepads) return null;
@@ -74,8 +73,7 @@ function pollGamepad(): Triple | null {
     const rt = gp.buttons[7]?.value ?? 0;
 
     const hasInput = Math.abs(lx) > 0.05 || Math.abs(ly) > 0.05 || rt > 0.05;
-    if (hasInput || gamepadConnected) {
-      gamepadConnected = true;
+    if (hasInput) {
       activeDevice = "gamepad";
       return {
         x: normalizeScalar((lx + 1) / 2),
@@ -235,6 +233,5 @@ export function resetSlidersDeviceSet(): void {
 export function resetSlidersInput(): void {
   bundle = null;
   activeDevice = "on-screen";
-  gamepadConnected = false;
   resetSlidersDeviceSet();
 }

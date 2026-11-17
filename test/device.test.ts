@@ -5,7 +5,12 @@ import {
   resetDeviceRegistry,
   type DeviceEntry,
 } from "../src/device.js";
-import { getSlidersDeviceSet, resetSlidersInput } from "../src/sources/gamepad.js";
+import {
+  getSlidersDeviceSet,
+  getSlidersInput,
+  getSlidersActiveDevice,
+  resetSlidersInput,
+} from "../src/sources/gamepad.js";
 import { getDpadDeviceSet, resetDpadInput } from "../src/sources/dpad.js";
 import { resetGamepadHub } from "../src/sources/gamepads.js";
 import { resetRuntime } from "../src/runtime.js";
@@ -140,6 +145,21 @@ describe("device-separated gamepad sliders", () => {
     expect(padB.x.value).toBeCloseTo(1);
     expect(padB.y.value).toBeCloseTo(0.5);
     expect(padB.rotation.value).toBeCloseTo(0);
+  });
+
+  it("falls back from gamepad to on-screen when the pad goes idle", () => {
+    installGamepads([makePad(0, "Pad", { lx: 1 })]);
+    const sliders = getSlidersInput();
+    tickTriple(sliders);
+    expect(getSlidersActiveDevice()).toBe("gamepad");
+    expect(sliders.x.value).toBeCloseTo(1);
+
+    // Pad still connected but centered — it must stop starving other inputs.
+    installGamepads([makePad(0, "Pad")]);
+    sliders.x._setValue(0.25);
+    tickTriple(sliders);
+    expect(getSlidersActiveDevice()).toBe("on-screen");
+    expect(sliders.x.value).toBeCloseTo(0.25);
   });
 
   it("separates d-pad vectors per controller", () => {
