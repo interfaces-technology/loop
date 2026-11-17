@@ -1,0 +1,27 @@
+src/transport/broadcast.ts
+  s_a479a8f0a3ea33::t_07fcba1326007f 50-52
+src/transport/serialize.ts
+  s_a479a8f0a3ea33::t_62e5f15865a96b 7-23,34-41,53-58,60-61,69-82,84,99-100
+src/transport/websocket.ts
+  s_a479a8f0a3ea33::t_2dcb9357af0367 45
+test/relay.test.ts
+  s_a479a8f0a3ea33::t_04e0043100612b 12,17,22,25,27,32
+test/wire.test.ts
+  s_a479a8f0a3ea33::t_3c1818544dbca4 39-72,97-104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "06f8408f8f397c2eca4c6e64159eb97e6078683f",
+  "prompts": {},
+  "sessions": {
+    "s_a479a8f0a3ea33": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_a479a8f0a3ea33",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
