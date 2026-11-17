@@ -30,3 +30,7 @@ export function keyboardSourceRead(): Packet | null {
   const handle = getKeyboardInput();
   return { kind: "data", type: "text", value: handle.value };
 }
+
+export function resetKeyboardInput(): void {
+  keyboardHandle = null;
+}

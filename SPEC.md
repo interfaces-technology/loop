@@ -1,6 +1,6 @@
 # Loop — Core Library Spec (v0.1)
 
-**Build status:** Slices 1–3 implemented (live text, d-pad square, sliders cube). Slices 4–5 (receipt printer, smile recipe) deferred.
+**Build status:** Slices 1–5 implemented (live text, d-pad square, sliders cube, receipt printer, smile recipe).
 
 Scope: the core function library only — the wire, the component model, inputs, outputs, and binding. Cross-device relay, the marketplace, the AI composer, and the visual canvas are platform concerns, out of scope here (§11). Written precisely enough for an AI coding agent to build from.
 
@@ -19,15 +19,25 @@ Scope: the core function library only — the wire, the component model, inputs,
 
 A single `requestAnimationFrame`-driven tick loop. Each tick: (1) sample every active source (`read` → packet); (2) flow packets through transforms (`process`); (3) deliver to sinks (`render`) and to bound value handles. Sources may also push via events. Pull is the default for render loops; push is for discrete events.
 
+Tick callbacks and handle samplers receive a `TickInfo` of `{ time, delta }` (`delta` in ms, `0` on the first tick) so author animations are framerate-independent. The loop starts on first work and **stops itself** when there are no live pipelines, tick callbacks, or handles.
+
 ## 3. The wire contract
 
 ```typescript
 type Vec = { x: number; y: number; z?: number };
 
-type Packet =
+// Structurally compatible with DOM ImageData, but not coupled to the DOM.
+interface Frame { readonly width: number; readonly height: number; readonly data: Uint8ClampedArray; }
+
+type Kind = "value" | "frame" | "data";
+
+// PacketOf<K> maps a kind to its packet — used to type source/transform/sink payloads.
+type PacketOf<K extends Kind> =
   | { kind: "value"; value: number | Vec }
-  | { kind: "frame"; frame: ImageData }
-  | { kind: "data"; type: string; value: unknown };
+  | { kind: "frame"; frame: Frame }
+  | { kind: "data"; type: DataType; value: unknown };
+
+type Packet = PacketOf<Kind>;
 ```
 
 | Kind | Carries | Normalization rule |
@@ -36,14 +46,19 @@ type Packet =
 | `frame` | pixel buffer | resolution-independent; consumers scale/fit |
 | `data` | text, events, JSON, coordinates | tagged by `type`; shape by convention |
 
+**Wire safety.** Anything relayed across a transport is validated on receipt and capped at `MAX_WIRE_BYTES` (64 KiB). Malformed or oversized packets are dropped rather than trusted; `frame` packets are not relayed in v0.1.
+
 ## 4. Component model
 
 ```typescript
 type Kind = "value" | "frame" | "data";
 
-interface SourceDef    { from: string; emits: Kind; read: (raw: unknown) => any; }
-interface TransformDef { accepts: Kind | Kind[]; emits: Kind; process: (input: Packet) => Packet; }
-interface SinkDef      { to: string; accepts: Kind | Kind[]; render: (input: Packet) => void; }
+// Defs are generic over their kind(s) so read/process/render payloads are typed.
+interface SourceDef<E extends Kind = Kind>     { from: string; emits: E; read: () => PacketOf<E> | null; }
+interface TransformDef<A extends Kind = Kind, E extends Kind = Kind> {
+  accepts: A | A[]; emits: E; process: (input: PacketOf<A>) => PacketOf<E>;
+}
+interface SinkDef<A extends Kind = Kind>        { to: string; accepts: A | A[]; render: (input: PacketOf<A>) => void; }
 
 loop.source(def)  loop.transform(def)  loop.sink(def)
 loop.component(def)   // dispatches on read/process/render
@@ -65,11 +80,12 @@ interface Handle<T = number | Vec> {
   readonly value: T;
   on(event: "change", fn: (v: T) => void): () => void;
   bind(el: unknown, apply: (v: T, el: unknown) => void): () => void;
+  dispose(): void;   // release listeners/bindings and detach from the loop
 }
 
 loop.input(name): Handle
 loop.output(name): Sink
-loop.tick(fn): () => void
+loop.tick(fn): () => void   // fn receives { time, delta }
 ```
 
 ## 7. Outputs: two styles, one value
@@ -88,15 +104,51 @@ loop.tick(fn): () => void
 | Text/speech/API/events | `data` | tagged by `type` |
 | Camera/tracking | `frame` (+ optional `data`) | resolution-independent |
 
+### 8a. Device identity (separating values)
+
+A source may be fed by more than one physical device at once — two controllers, a controller plus the keyboard. `loop.input(name)` blends every contributor into one handle and is the right default for a single operator. When contributors must stay apart, `loop.inputs(name)` returns a **`DeviceSet`**: one handle per device, addressed by a stable id.
+
+```typescript
+interface Device { id: string; kind: string; index: number; label: string; }
+
+interface DeviceSet<T> {
+  name: string;
+  devices(): Device[];
+  get(id: string): T | undefined;       // "gamepad:1"
+  at(index: number): T | undefined;     // ordinal within its family
+  values(): T[];
+  entries(): Array<{ device: Device; value: T }>;
+  each(fn: (value: T, device: Device) => void): void;
+  on(event: "change", fn: (devices: Device[]) => void): () => void;
+}
+
+loop.inputs("dpad" | "sliders" | "keyboard" | "smile"): DeviceSet<T>
+loop.devices(kind?: string): Device[]
+loop.onDevices(fn: (devices: Device[]) => void): () => void
+```
+
+- Device ids are stable while connected: `gamepad:0`, `gamepad:1`, `keyboard`, `midi`, `on-screen`.
+- One owner per family keeps identity honest: a hub polls gamepads, syncs the registry's connected set, and notifies lane owners on arrival/removal, so every preset agrees on which physical pad is `gamepad:1`.
+- Separation is additive, not a merge policy — Loop never decides how two devices combine. That choice belongs to the application (sum, priority, last-wins).
+
 ## 9. Public API surface (v0.1)
 
 ```
 loop.source  loop.transform  loop.sink  loop.component
 loop.pipe    loop.connect
-loop.input   loop.output     loop.tick
-handle.value  handle.on  handle.bind
-loop.layout  loop.filter  loop.capture  // stubs until slice 4+
+loop.input   loop.inputs     loop.output     loop.tick
+loop.devices  loop.onDevices
+handle.value  handle.on  handle.bind  handle.dispose
+loop.layout  loop.filter  loop.capture
+loop.registerInput  loop.registerOutput  loop.registerLayout
+loop.reset
 ```
+
+- `loop.filter(fn)` — a `value` → `value` transform for clamp/scale/remap.
+- `loop.capture(handle)` — bridge an existing `Handle` into a pipeline as a `value` source.
+- `loop.register*` — extend inputs, outputs, and layouts without forking.
+- `loop.inputs(name)` / `loop.devices()` — read inputs separated by device identity (§8a).
+- `loop.reset()` — tear down every singleton (relay rooms, layouts, inputs, devices, frame loop); used by tests and embeds.
 
 ES module + TS types. Plain `<script>` tag, no build step. Offline by default.
 
@@ -105,8 +157,8 @@ ES module + TS types. Plain `<script>` tag, no build step. Offline by default.
 1. Live text input — `data` path via keyboard
 2. D-pad moves square — `value` Vec, keyboard or gamepad
 3. Sliders move/rotate cube — `value` scalars, gamepad/MIDI/on-screen fallback
-4. One hardware sink — `layout("receipt")` → ESC/POS → Web Serial *(deferred)*
-5. One recipe — smile → receipt prints *(deferred)*
+4. One hardware sink — `layout("receipt")` → ESC/POS → Web Serial
+5. One recipe — smile → receipt prints
 
 ## 11. Out of scope (non-goals for v0.1)
 
@@ -118,7 +170,9 @@ Cross-device relay; marketplace/publishing; AI composer; visual canvas; accounts
 
 ## 13. Open questions (resolved for v0.1)
 
-- **Frame type:** `ImageData` for v0.1; swap to `VideoFrame` later for zero-copy.
-- **`data` type registry:** convention strings (`"text"`, `"event"`); optional match at `pipe()` time.
+- **Frame type:** structural `Frame` (`width`/`height`/`data`), assignable from `ImageData`; swap to `VideoFrame` later for zero-copy.
+- **`data` type registry:** convention strings (`"text"`, `"event"`, custom strings allowed); optional match at `pipe()` time.
 - **Vec home:** vectors live under `value`, not `data`.
-- **Default tick rate:** `requestAnimationFrame`; push via `on("change")` for discrete events.
+- **Default tick rate:** `requestAnimationFrame` (with `{ time, delta }`); push via `on("change")` for discrete events.
+- **Transport reliability:** the WebSocket transport buffers the newest packet while offline and reconnects with capped exponential backoff.
+- **Unresolved:** a `createLoop()` instance factory (isolated runtimes) — v0.1 remains a single shared runtime with `loop.reset()`.

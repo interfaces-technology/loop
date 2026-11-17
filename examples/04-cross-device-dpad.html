@@ -385,7 +385,7 @@
     let posY = 0;
     let touchVec = { x: 0, y: 0 };
     let padPointerId = null;
-    const speed = 4;
+    const speed = 240; // px per second
     const half = 24;
 
     function randomRoom() {
@@ -603,10 +603,11 @@
       hint.textContent = "Waiting for controller input…";
       arena.style.display = "block";
 
-      stopTick = loop.tick(() => {
+      stopTick = loop.tick(({ delta }) => {
         const { x, y } = remote.value;
-        posX += x * speed;
-        posY += y * speed;
+        const step = speed * (delta / 1000);
+        posX += x * step;
+        posY += y * step;
 
         const rect = arena.getBoundingClientRect();
         const maxX = rect.width / 2 - half;

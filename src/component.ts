@@ -1,24 +1,24 @@
-import type { Kind, Packet } from "./types.js";
+import type { Kind, DataType, Packet, PacketOf } from "./types.js";
 
-export interface SourceDef {
+export interface SourceDef<E extends Kind = Kind> {
   from: string;
-  emits: Kind;
-  dataType?: string;
-  read: () => Packet | null;
+  emits: E;
+  dataType?: DataType;
+  read: () => PacketOf<E> | null;
 }
 
-export interface TransformDef {
-  accepts: Kind | Kind[];
-  emits: Kind;
-  dataType?: string;
-  process: (input: Packet) => Packet;
+export interface TransformDef<A extends Kind = Kind, E extends Kind = Kind> {
+  accepts: A | A[];
+  emits: E;
+  dataType?: DataType;
+  process: (input: PacketOf<A>) => PacketOf<E>;
 }
 
-export interface SinkDef {
+export interface SinkDef<A extends Kind = Kind> {
   to: string;
-  accepts: Kind | Kind[];
-  dataType?: string;
-  render: (input: Packet) => void;
+  accepts: A | A[];
+  dataType?: DataType;
+  render: (input: PacketOf<A>) => void;
 }
 
 export type ComponentDef = SourceDef | TransformDef | SinkDef;
@@ -28,7 +28,7 @@ export interface Stage {
   name: string;
   emits?: Kind;
   accepts?: Kind | Kind[];
-  dataType?: string;
+  dataType?: DataType;
   read?: () => Packet | null;
   process?: (input: Packet) => Packet;
   render?: (input: Packet) => void;
@@ -38,34 +38,36 @@ function acceptsList(accepts: Kind | Kind[]): Kind[] {
   return Array.isArray(accepts) ? accepts : [accepts];
 }
 
-export function source(def: SourceDef): Stage {
+export function source<E extends Kind = Kind>(def: SourceDef<E>): Stage {
   return {
     role: "source",
     name: def.from,
     emits: def.emits,
     dataType: def.dataType,
-    read: def.read,
+    read: def.read as () => Packet | null,
   };
 }
 
-export function transform(def: TransformDef): Stage {
+export function transform<A extends Kind = Kind, E extends Kind = Kind>(
+  def: TransformDef<A, E>,
+): Stage {
   return {
     role: "transform",
     name: "transform",
     accepts: def.accepts,
     emits: def.emits,
     dataType: def.dataType,
-    process: def.process,
+    process: def.process as unknown as (input: Packet) => Packet,
   };
 }
 
-export function sink(def: SinkDef): Stage {
+export function sink<A extends Kind = Kind>(def: SinkDef<A>): Stage {
   return {
     role: "sink",
     name: def.to,
     accepts: def.accepts,
     dataType: def.dataType,
-    render: def.render,
+    render: def.render as (input: Packet) => void,
   };
 }
 

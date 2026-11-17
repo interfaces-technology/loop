@@ -64,14 +64,15 @@
 
     let posX = 0;
     let posY = 0;
-    const speed = 4;
+    const speed = 240; // px per second
     const arenaRect = () => arena.getBoundingClientRect();
     const half = 24;
 
-    loop.tick(() => {
+    loop.tick(({ delta }) => {
       const { x, y } = dpad.value;
-      posX += x * speed;
-      posY += y * speed;
+      const step = speed * (delta / 1000);
+      posX += x * step;
+      posY += y * step;
 
       const rect = arenaRect();
       const maxX = rect.width / 2 - half;

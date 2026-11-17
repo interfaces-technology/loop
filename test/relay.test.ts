@@ -110,4 +110,18 @@ describe("cross-device relay", () => {
 
     expect(results).toEqual([0.42]);
   });
+
+  it("stops delivering to a handle after dispose", async () => {
+    const transport = memoryTransport("dispose-demo");
+    const receiver = room("dispose-demo", transport);
+    await receiver.connect();
+
+    const remote = receiver.subscribe({ x: 0, y: 0 });
+    transport.send({ kind: "value", value: { x: 1, y: 1 } });
+    expect(remote.value).toEqual({ x: 1, y: 1 });
+
+    remote.dispose();
+    transport.send({ kind: "value", value: { x: 2, y: 2 } });
+    expect(remote.value).toEqual({ x: 1, y: 1 });
+  });
 });

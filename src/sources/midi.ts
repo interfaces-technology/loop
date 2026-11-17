@@ -1,4 +1,4 @@
-import { getSlidersInput, setSlidersActiveDevice } from "./gamepad.js";
+import { getMidiLane, getSlidersInput, setSlidersActiveDevice } from "./gamepad.js";
 
 let midiInitialized = false;
 
@@ -11,6 +11,7 @@ export async function initMidi(): Promise<void> {
   try {
     const access = await navigator.requestMIDIAccess();
     const sliders = getSlidersInput();
+    const lane = getMidiLane();
     const ccValues = new Map<number, number>();
 
     for (const input of access.inputs.values()) {
@@ -29,12 +30,25 @@ export async function initMidi(): Promise<void> {
         setSlidersActiveDevice("midi");
 
         const ccs = [...ccValues.entries()].sort((a, b) => a[0] - b[0]);
-        if (ccs[0]) sliders.x._setValue(ccs[0][1]);
-        if (ccs[1]) sliders.y._setValue(ccs[1][1]);
-        if (ccs[2]) sliders.rotation._setValue(ccs[2][1]);
+        if (ccs[0]) {
+          sliders.x._setValue(ccs[0][1]);
+          lane.x._setValue(ccs[0][1]);
+        }
+        if (ccs[1]) {
+          sliders.y._setValue(ccs[1][1]);
+          lane.y._setValue(ccs[1][1]);
+        }
+        if (ccs[2]) {
+          sliders.rotation._setValue(ccs[2][1]);
+          lane.rotation._setValue(ccs[2][1]);
+        }
       };
     }
   } catch {
     // MIDI unavailable — graceful no-op
   }
+}
+
+export function resetMidi(): void {
+  midiInitialized = false;
 }

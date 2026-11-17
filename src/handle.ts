@@ -1,6 +1,6 @@
 import type { Vec } from "./types.js";
 import { valuesEqual } from "./types.js";
-import { getRuntime } from "./runtime.js";
+import { getRuntime, type TickInfo } from "./runtime.js";
 
 type ChangeFn<T> = (v: T) => void;
 type BindFn<T> = (v: T, el: unknown) => void;
@@ -9,10 +9,11 @@ export interface Handle<T = number | Vec> {
   readonly value: T;
   on(event: "change", fn: ChangeFn<T>): () => void;
   bind(el: unknown, apply: BindFn<T>): () => void;
-  _tick(): void;
+  /** Release every listener, binding, and sampler, and detach from the loop. */
+  dispose(): void;
+  _tick(info?: TickInfo): void;
   _setValue(v: T): void;
-  _getSampler(): (() => T) | null;
-  _setSampler(sampler: () => T): void;
+  _setSampler(sampler: (() => T) | null): void;
 }
 
 export function createHandle<T>(initial: T): Handle<T> {
@@ -20,6 +21,21 @@ export function createHandle<T>(initial: T): Handle<T> {
   const changeListeners = new Set<ChangeFn<T>>();
   const bindings = new Set<{ el: unknown; apply: BindFn<T> }>();
   let sampler: (() => T) | null = null;
+  let registered = false;
+
+  const ensureRegistered = (): void => {
+    if (!registered && (sampler !== null || bindings.size > 0)) {
+      registered = true;
+      getRuntime().registerHandle(handle as Handle<unknown>);
+    }
+  };
+
+  const maybeUnregister = (): void => {
+    if (registered && sampler === null && bindings.size === 0) {
+      registered = false;
+      getRuntime().unregisterHandle(handle as Handle<unknown>);
+    }
+  };
 
   const handle: Handle<T> = {
     get value() {
@@ -38,17 +54,23 @@ export function createHandle<T>(initial: T): Handle<T> {
       const binding = { el, apply };
       bindings.add(binding);
       apply(current, el);
-      getRuntime().registerHandle(handle as Handle<unknown>);
-      return () => bindings.delete(binding);
+      ensureRegistered();
+      return () => {
+        bindings.delete(binding);
+        maybeUnregister();
+      };
     },
 
-    _tick() {
+    dispose(): void {
+      changeListeners.clear();
+      bindings.clear();
+      sampler = null;
+      maybeUnregister();
+    },
+
+    _tick(): void {
       if (sampler) {
-        const next = sampler();
-        handle._setValue(next);
-      }
-      for (const { el, apply } of bindings) {
-        apply(current, el);
+        handle._setValue(sampler());
       }
     },
 
@@ -60,24 +82,24 @@ export function createHandle<T>(initial: T): Handle<T> {
             ? !valuesEqual(current as number | Vec, v as number | Vec)
             : current !== v;
 
-      if (changed) {
-        current = v;
-        for (const fn of changeListeners) {
-          fn(v);
-        }
-        for (const { el, apply } of bindings) {
-          apply(v, el);
-        }
+      if (!changed) return;
+
+      current = v;
+      for (const fn of changeListeners) {
+        fn(v);
+      }
+      for (const { el, apply } of bindings) {
+        apply(v, el);
       }
     },
 
-    _getSampler() {
-      return sampler;
-    },
-
-    _setSampler(s: () => T) {
+    _setSampler(s: (() => T) | null) {
       sampler = s;
-      getRuntime().registerHandle(handle as Handle<unknown>);
+      if (s) {
+        ensureRegistered();
+      } else {
+        maybeUnregister();
+      }
     },
   };
 

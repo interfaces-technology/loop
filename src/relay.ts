@@ -4,6 +4,7 @@ import { getRuntime } from "./runtime.js";
 import type { Kind, Packet, Vec } from "./types.js";
 import { isVec } from "./types.js";
 import { broadcastTransport } from "./transport/broadcast.js";
+import { packetKey } from "./transport/serialize.js";
 import type { Transport, TransportStatus } from "./transport/types.js";
 
 const roomRegistry = new Map<string, RelayRoom>();
@@ -85,7 +86,7 @@ function createRelayRoom(code: string, transport: Transport): RelayRoom {
     subscribe<T extends number | Vec>(initial: T): Handle<T> {
       const handle = createHandle(initial);
 
-      transport.onPacket((packet) => {
+      const off = transport.onPacket((packet) => {
         if (packet.kind !== "value") return;
 
         const value = packet.value;
@@ -96,7 +97,12 @@ function createRelayRoom(code: string, transport: Transport): RelayRoom {
         }
       });
 
-      getRuntime().registerHandle(handle as Handle<unknown>);
+      const dispose = handle.dispose.bind(handle);
+      handle.dispose = () => {
+        off();
+        dispose();
+      };
+
       return handle;
     },
 
@@ -107,7 +113,7 @@ function createRelayRoom(code: string, transport: Transport): RelayRoom {
         const packet = getPacket();
         if (!packet) return;
 
-        const key = JSON.stringify(packet);
+        const key = packetKey(packet);
         if (key === last) return;
         last = key;
 

@@ -11,12 +11,16 @@
   },
   "files": [
     "dist",
+    "examples",
     "SPEC.md"
   ],
   "scripts": {
     "build": "node_modules/.bin/tsc",
+    "watch": "node_modules/.bin/tsc --watch",
+    "build:mcp": "npm run build --prefix packages/loop-mcp",
     "test": "node_modules/.bin/vitest run",
     "validate": "node_modules/.bin/tsc --noEmit && node_modules/.bin/vitest run",
+    "dev": "npm run build && npx --yes serve examples",
     "relay": "node scripts/relay-server.mjs"
   },
   "devDependencies": {

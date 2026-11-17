@@ -4,7 +4,7 @@ import { getRuntime } from "./runtime.js";
 
 export interface Pipeline {
   stages: Stage[];
-  start(): void;
+  start(): Pipeline;
   stop(): void;
 }
 
@@ -26,6 +26,7 @@ export function pipe(...stages: Stage[]): Pipeline {
     stages,
     start() {
       runtime.registerPipeline(pipeline);
+      return pipeline;
     },
     stop() {
       runtime.unregisterPipeline(pipeline);

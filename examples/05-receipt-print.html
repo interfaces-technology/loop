@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loop — Receipt Print</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.25rem; font-weight: 500; opacity: 0.6; }
+    .device { font-size: 0.75rem; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.1em; }
+    .hint { font-size: 0.85rem; opacity: 0.45; text-align: center; max-width: 420px; line-height: 1.5; }
+    .card {
+      width: min(480px, 90vw);
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 1rem;
+      padding: 1rem;
+      resize: vertical;
+    }
+    textarea:focus { outline: 2px solid #555; border-color: #555; }
+    .row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    button {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #f0f0f0;
+      border-radius: 8px;
+      padding: 0.65rem 1rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    button:hover { border-color: #666; }
+    button.primary {
+      background: #f0f0f0;
+      color: #0a0a0a;
+      border-color: #f0f0f0;
+      font-weight: 500;
+    }
+    button.primary:hover { background: #ddd; }
+    #status, #last-printed {
+      font-size: 0.8rem;
+      opacity: 0.55;
+      font-variant-numeric: tabular-nums;
+    }
+    #sim-log {
+      width: 100%;
+      min-height: 96px;
+      max-height: 180px;
+      overflow: auto;
+      background: #0d0d0d;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.72rem;
+      line-height: 1.4;
+      color: #9cdcfe;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h1>Loop — Receipt Print</h1>
+  <p class="device">output: layout("receipt") → ESC/POS → Web Serial</p>
+  <p class="hint">Connect a USB thermal printer (Chrome + Web Serial), or use simulated mode to inspect ESC/POS bytes on screen.</p>
+
+  <div class="card">
+    <textarea id="input" placeholder="Type receipt text…" autofocus></textarea>
+
+    <div class="row">
+      <button id="connect" type="button">Connect printer</button>
+      <button id="disconnect" type="button">Disconnect</button>
+      <button id="print" class="primary" type="button">Print</button>
+    </div>
+
+    <p id="status">Status: simulated mode (not connected)</p>
+    <p id="last-printed">Last printed: —</p>
+
+    <div>
+      <p class="device" style="margin-bottom: 0.5rem;">Simulated ESC/POS log</p>
+      <div id="sim-log">Waiting for print job…</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import loop from "../dist/index.js";
+
+    const statusEl = document.getElementById("status");
+    const lastPrintedEl = document.getElementById("last-printed");
+    const simLog = document.getElementById("sim-log");
+    const connectBtn = document.getElementById("connect");
+    const disconnectBtn = document.getElementById("disconnect");
+    const printBtn = document.getElementById("print");
+
+    const keyboard = loop.input("keyboard");
+    const receipt = loop.layout("receipt");
+
+    let pendingPrint = null;
+
+    receipt.setSimulatedHandler((bytes) => {
+      const hex = Array.from(bytes)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join(" ");
+      simLog.textContent = hex;
+    });
+
+    function setStatus(text) {
+      statusEl.textContent = `Status: ${text}`;
+    }
+
+    connectBtn.addEventListener("click", async () => {
+      try {
+        await receipt.connect();
+        setStatus(receipt.connected ? "connected to printer" : "simulated mode");
+      } catch (err) {
+        setStatus(`connect failed — ${err.message}`);
+      }
+    });
+
+    disconnectBtn.addEventListener("click", () => {
+      receipt.disconnect();
+      setStatus("simulated mode (not connected)");
+    });
+
+    printBtn.addEventListener("click", () => {
+      const text = keyboard.value.trim();
+      if (!text) return;
+      pendingPrint = `${text}\n${new Date().toLocaleTimeString()}`;
+    });
+
+    const src = loop.source({
+      from: "keyboard",
+      emits: "data",
+      dataType: "text",
+      read: () => {
+        if (!pendingPrint) return null;
+        const value = pendingPrint;
+        pendingPrint = null;
+        return { kind: "data", type: "text", value };
+      },
+    });
+
+    const snk = loop.sink({
+      to: "receipt-log",
+      accepts: "data",
+      dataType: "text",
+      render: (packet) => {
+        if (packet.kind !== "data") return;
+        lastPrintedEl.textContent = `Last printed: ${packet.value}`;
+      },
+    });
+
+    loop.pipe(src, receipt, snk).start();
+  </script>
+</body>
+</html>
