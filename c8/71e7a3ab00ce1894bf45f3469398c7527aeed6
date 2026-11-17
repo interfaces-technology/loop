@@ -1,0 +1,23 @@
+src/device.ts
+  s_791cc0afeb3df8::t_2b1cd5e411d7ab 26-30
+src/input.ts
+  s_791cc0afeb3df8::t_a57800eb3e181a 12,31,44-45,129-139
+test/registry.test.ts
+  s_791cc0afeb3df8::t_261404212d6806 5,28-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c871e7a3ab00ce1894bf45f3469398c7527aeed6",
+  "prompts": {},
+  "sessions": {
+    "s_791cc0afeb3df8": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_791cc0afeb3df8",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
