@@ -12,6 +12,7 @@ export function websocketTransport(url: string, room: string): Transport {
 class WebSocketTransport implements Transport {
   status: TransportStatus = "idle";
   private socket: WebSocket | null = null;
+  private connectPromise: Promise<void> | null = null;
   private packetListeners = new Set<(packet: Packet) => void>();
   private statusListeners = new Set<(status: TransportStatus) => void>();
   private shouldReconnect = false;
@@ -24,11 +25,20 @@ class WebSocketTransport implements Transport {
     private readonly room: string,
   ) {}
 
-  async connect(): Promise<void> {
-    if (this.status === "connected") return;
+  connect(): Promise<void> {
+    if (this.status === "connected") return Promise.resolve();
+    // Share one in-flight attempt so concurrent connect() calls can't open
+    // competing sockets.
+    if (this.connectPromise) return this.connectPromise;
     this.shouldReconnect = true;
     this.clearReconnect();
-    await this.open();
+    const attempt = this.open();
+    const clear = () => {
+      if (this.connectPromise === attempt) this.connectPromise = null;
+    };
+    attempt.then(clear, clear);
+    this.connectPromise = attempt;
+    return attempt;
   }
 
   disconnect(): void {
@@ -70,11 +80,25 @@ class WebSocketTransport implements Transport {
     this.setStatus("connecting");
     const endpoint = buildEndpoint(this.url, this.room);
 
-    return new Promise<void>((resolve, reject) => {
-      const socket = new WebSocket(endpoint);
-      this.socket = socket;
-      socket.binaryType = "arraybuffer";
+    let socket: WebSocket;
+    try {
+      socket = new WebSocket(endpoint);
+    } catch (err) {
+      // A synchronous constructor failure (e.g. an invalid URL) never fires
+      // onclose, so without this the reconnect loop would stall forever.
+      this.setStatus("error");
+      this.scheduleReconnect();
+      return Promise.reject(err instanceof Error ? err : new Error(String(err)));
+    }
 
+    this.socket = socket;
+    socket.binaryType = "arraybuffer";
+
+    // Events from a superseded socket (disconnect/connect race, late close)
+    // must not touch the live one.
+    const isCurrent = () => this.socket === socket;
+
+    return new Promise<void>((resolve, reject) => {
       let rejected = false;
       const rejectOnce = (err: Error) => {
         if (!rejected) {
@@ -84,6 +108,7 @@ class WebSocketTransport implements Transport {
       };
 
       socket.onopen = () => {
+        if (!isCurrent()) return;
         this.reconnectAttempts = 0;
         this.setStatus("connected");
         this.flushPending();
@@ -91,6 +116,7 @@ class WebSocketTransport implements Transport {
       };
 
       socket.onerror = () => {
+        if (!isCurrent()) return;
         if (this.status !== "connected") {
           this.setStatus("error");
           rejectOnce(new Error(`WebSocket failed to connect to ${endpoint}`));
@@ -98,6 +124,7 @@ class WebSocketTransport implements Transport {
       };
 
       socket.onclose = () => {
+        if (!isCurrent()) return;
         this.socket = null;
         if (this.status !== "connected") {
           this.setStatus("error");
@@ -109,6 +136,7 @@ class WebSocketTransport implements Transport {
       };
 
       socket.onmessage = (event: MessageEvent) => {
+        if (!isCurrent()) return;
         const data = event.data;
         if (typeof Blob !== "undefined" && data instanceof Blob) {
           void data
@@ -145,7 +173,7 @@ class WebSocketTransport implements Transport {
       this.reconnectTimer = null;
       if (!this.shouldReconnect) return;
       void this.open().catch(() => {
-        // The retry failed to open; onclose already scheduled the next attempt.
+        // The retry failed to open; onclose (or a sync throw) schedules the next.
       });
     }, delay + jitter);
   }
