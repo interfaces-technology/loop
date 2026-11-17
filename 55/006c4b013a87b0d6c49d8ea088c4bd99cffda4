@@ -1,0 +1,19 @@
+LICENSE
+  s_9483f460b7caaf::t_4dca6ba4565e08 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "55006c4b013a87b0d6c49d8ea088c4bd99cffda4",
+  "prompts": {},
+  "sessions": {
+    "s_9483f460b7caaf": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_9483f460b7caaf",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
