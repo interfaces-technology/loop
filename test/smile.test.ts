@@ -19,4 +19,14 @@ describe("smile input", () => {
     smile._tick();
     expect(smile.value).toBe(0.82);
   });
+
+  it("idles at neutral without a sampler instead of echoing itself", () => {
+    const smile = getSmileInput();
+    smile._tick();
+    expect(smile.value).toBe(0);
+    // A manual write must not survive the next tick — there is no real source.
+    smile._setValue(0.9);
+    smile._tick();
+    expect(smile.value).toBe(0);
+  });
 });

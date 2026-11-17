@@ -9,8 +9,9 @@ export function getSmileInput(): Handle<number> {
   if (!smileHandle) {
     smileHandle = createHandle(0);
     smileHandle._setSampler(() => {
-      const raw = customSampler ? customSampler() : smileHandle!.value;
-      return normalizeScalar(raw);
+      // No camera sampler registered yet — idle at neutral rather than
+      // pseudo-sampling the handle's own (unchanging) value.
+      return normalizeScalar(customSampler ? customSampler() : 0);
     });
     getRuntime().registerHandle(smileHandle as Handle<unknown>);
   }
