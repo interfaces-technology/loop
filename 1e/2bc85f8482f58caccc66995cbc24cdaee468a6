@@ -1,0 +1,21 @@
+src/sources/gamepad.ts
+  s_d6c0dedab3babd::t_aba740fb5a4fd4 76
+test/device.test.ts
+  s_d6c0dedab3babd::t_a6db1fbba7d713 8-13,150-164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1e2bc85f8482f58caccc66995cbc24cdaee468a6",
+  "prompts": {},
+  "sessions": {
+    "s_d6c0dedab3babd": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_d6c0dedab3babd",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
