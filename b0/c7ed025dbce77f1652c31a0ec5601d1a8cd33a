@@ -1,0 +1,19 @@
+package.json
+  s_928ecf24482343::t_8bfab9dcc16b9b 5,7,26-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b0c7ed025dbce77f1652c31a0ec5601d1a8cd33a",
+  "prompts": {},
+  "sessions": {
+    "s_928ecf24482343": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_928ecf24482343",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
