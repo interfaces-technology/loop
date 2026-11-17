@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { tick, getRuntime, resetRuntime, type TickInfo } from "../src/runtime.js";
 import { createHandle } from "../src/handle.js";
+import { pipe } from "../src/pipe.js";
+import { source, sink } from "../src/component.js";
 
 describe("runtime", () => {
   beforeEach(() => {
@@ -44,5 +46,54 @@ describe("runtime", () => {
 
     handle.dispose();
     expect(getRuntime().isRunning).toBe(false);
+  });
+
+  it("keeps ticking when a tick callback throws", () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    let calls = 0;
+
+    tick(() => {
+      calls += 1;
+      if (calls === 1) throw new Error("boom");
+    });
+
+    vi.advanceTimersByTime(16);
+    vi.advanceTimersByTime(16);
+
+    expect(calls).toBeGreaterThanOrEqual(2);
+    expect(getRuntime().isRunning).toBe(true);
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it("keeps ticking other work when a pipeline throws", () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    let sinkCalls = 0;
+    let ticks = 0;
+
+    pipe(
+      source({ from: "s", emits: "value", read: () => ({ kind: "value", value: 1 }) }),
+      sink({
+        to: "bad",
+        accepts: "value",
+        render() {
+          sinkCalls += 1;
+          throw new Error("sink boom");
+        },
+      }),
+    ).start();
+
+    tick(() => {
+      ticks += 1;
+    });
+
+    vi.advanceTimersByTime(16);
+    vi.advanceTimersByTime(16);
+
+    expect(sinkCalls).toBeGreaterThanOrEqual(1);
+    expect(ticks).toBeGreaterThanOrEqual(2);
+    expect(getRuntime().isRunning).toBe(true);
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });

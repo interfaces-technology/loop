@@ -36,6 +36,10 @@ function cancelFrame(id: number): void {
   }
 }
 
+function reportTickError(scope: string, err: unknown): void {
+  console.error(`[loop] ${scope} threw during tick`, err);
+}
+
 class Runtime {
   private pipelines: Set<Pipeline> = new Set();
   private tickFns: Set<TickFn> = new Set();
@@ -101,15 +105,27 @@ class Runtime {
     const info: TickInfo = { time, delta };
 
     for (const handle of this.handles) {
-      handle._tick(info);
+      try {
+        handle._tick(info);
+      } catch (err) {
+        reportTickError("handle", err);
+      }
     }
 
     for (const pipeline of this.pipelines) {
-      runPipeline(pipeline.stages);
+      try {
+        runPipeline(pipeline.stages);
+      } catch (err) {
+        reportTickError(`pipeline "${pipeline.stages.map((s) => s.name).join(" → ")}"`, err);
+      }
     }
 
     for (const fn of this.tickFns) {
-      fn(info);
+      try {
+        fn(info);
+      } catch (err) {
+        reportTickError("tick callback", err);
+      }
     }
 
     if (!this.hasWork()) {
