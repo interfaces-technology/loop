@@ -1,0 +1,21 @@
+src/sources/smile.ts
+  s_14987547b9f17b::t_612d12f3bb8319 12-14
+test/smile.test.ts
+  s_14987547b9f17b::t_39dda39657bb76 22-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6216bcf17213c9620860ec67d98bb784f333a4e8",
+  "prompts": {},
+  "sessions": {
+    "s_14987547b9f17b": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_14987547b9f17b",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
