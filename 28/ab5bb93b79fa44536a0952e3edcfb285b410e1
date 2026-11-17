@@ -1,0 +1,21 @@
+src/component.ts
+  s_e21333ed8da1b9::t_63b4d877a6163b 11-12,58
+test/pipe.test.ts
+  s_e21333ed8da1b9::t_1114167f98cf41 106-125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "28ab5bb93b79fa44536a0952e3edcfb285b410e1",
+  "prompts": {},
+  "sessions": {
+    "s_e21333ed8da1b9": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_e21333ed8da1b9",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
