@@ -28,7 +28,6 @@
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
-    "jsdom": "^30.0.1",
     "typescript": "^5",
     "vitest": "^3",
     "ws": "^8.21.3"
