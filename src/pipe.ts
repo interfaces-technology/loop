@@ -40,6 +40,28 @@ export function connect(a: Stage, b: Stage): Pipeline {
   return pipe(a, b);
 }
 
+const kindWarnings = new WeakMap<Stage, Set<string>>();
+
+// A stage can lie about `emits` (JS callers, bad casts). Check the actual
+// packet kind at runtime and drop mismatches instead of feeding them on.
+function emittedKindOk(stage: Stage, packet: Packet): boolean {
+  const emits = stage.emits;
+  if (!emits || packet.kind === emits) return true;
+
+  let seen = kindWarnings.get(stage);
+  if (!seen) {
+    seen = new Set();
+    kindWarnings.set(stage, seen);
+  }
+  if (!seen.has(packet.kind)) {
+    seen.add(packet.kind);
+    console.warn(
+      `[loop] Stage "${stage.name}" declared emits:"${emits}" but produced a "${packet.kind}" packet; dropping it.`,
+    );
+  }
+  return false;
+}
+
 export function runPipeline(stages: Stage[]): void {
   let packet: Packet | null = null;
 
@@ -47,8 +69,10 @@ export function runPipeline(stages: Stage[]): void {
     if (stage.role === "source" && stage.read) {
       packet = stage.read();
       if (packet === null) return;
+      if (!emittedKindOk(stage, packet)) return;
     } else if (stage.role === "transform" && stage.process && packet !== null) {
       packet = stage.process(packet);
+      if (packet !== null && !emittedKindOk(stage, packet)) return;
     } else if (stage.role === "sink" && stage.render && packet !== null) {
       stage.render(packet);
     }

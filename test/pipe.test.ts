@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { source, transform, sink } from "../src/component.js";
-import { pipe } from "../src/pipe.js";
+import { pipe, runPipeline } from "../src/pipe.js";
 import type { Packet } from "../src/types.js";
 
 describe("pipe type-checking", () => {
@@ -121,5 +121,26 @@ describe("transform names", () => {
     const src = source({ from: "src", emits: "value", read: () => null });
     const bad = transform({ name: "needs-data", accepts: "data", emits: "data", process: (p) => p });
     expect(() => pipe(src, bad)).toThrow(/needs-data/);
+  });
+});
+
+describe("runtime kind validation", () => {
+  it("drops packets whose kind contradicts the stage's emits", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const bad = {
+      role: "source" as const,
+      name: "bad",
+      emits: "data" as const,
+      read: () => ({ kind: "value" as const, value: 1 }),
+    };
+    const seen: Packet[] = [];
+    const snk = sink({ to: "snk", accepts: ["value", "data"], render: (p) => seen.push(p) });
+
+    runPipeline([bad, snk]);
+    runPipeline([bad, snk]);
+
+    expect(seen).toHaveLength(0);
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
   });
 });
