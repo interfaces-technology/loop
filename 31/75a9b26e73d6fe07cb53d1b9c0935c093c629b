@@ -1,0 +1,19 @@
+test/examples.test.ts
+  s_3ab9b544763f3c::t_91575043ce326d 1-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3175a9b26e73d6fe07cb53d1b9c0935c093c629b",
+  "prompts": {},
+  "sessions": {
+    "s_3ab9b544763f3c": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_3ab9b544763f3c",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
