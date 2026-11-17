@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
   registerInput,
   input,
+  inputs,
   registerOutput,
   output,
   clearInputRegistries,
@@ -22,6 +23,20 @@ describe("input / output registries", () => {
     const handle = createHandle(0.42);
     registerInput("custom", () => handle);
     expect(input("custom")).toBe(handle);
+  });
+
+  it("exposes custom inputs through inputs() as a single-device set", () => {
+    const handle = createHandle(7);
+    registerInput("custom", () => handle);
+
+    const set = inputs("custom");
+    expect(set.get("custom")).toBe(handle);
+    expect(set.devices().map((d) => d.id)).toEqual(["custom"]);
+
+    // Re-registering swaps the underlying handle.
+    const replacement = createHandle(9);
+    registerInput("custom", () => replacement);
+    expect(inputs("custom").get("custom")).toBe(replacement);
   });
 
   it("replaces a previously registered input", () => {

@@ -9,6 +9,7 @@ import { layout } from "./layout.js";
 import {
   createDeviceSet,
   getDeviceRegistry,
+  markSingletonKind,
   type DeviceEntry,
   type DeviceSet,
 } from "./device.js";
@@ -27,6 +28,7 @@ const inputInstances = new Map<string, InputHandle>();
 const outputInstances = new Map<string, Stage>();
 const inputFactories = new Map<string, InputFactory>();
 const outputFactories = new Map<string, OutputFactory>();
+const customDeviceSets = new Map<string, DeviceSet<unknown>>();
 
 inputFactories.set("keyboard", getKeyboardInput);
 inputFactories.set("dpad", getDpadInput);
@@ -39,6 +41,8 @@ outputFactories.set("receipt", () => layout("receipt"));
 export function registerInput(name: string, factory: InputFactory): void {
   inputFactories.set(name, factory);
   inputInstances.delete(name);
+  customDeviceSets.delete(name);
+  markSingletonKind(name);
 }
 
 /** Register a reusable output (hardware sink) by name. */
@@ -122,10 +126,17 @@ export function inputs(name: string): DeviceSet<unknown> {
     case "smile":
       smileDeviceSet ??= singleDeviceSet("smile", "smile", "Smile", getSmileInput);
       return smileDeviceSet;
-    default:
-      throw new Error(
-        `Unknown input: "${name}". Device-separated inputs: dpad, sliders, keyboard, smile`,
-      );
+    default: {
+      // Custom registered inputs get a single-device view under their own
+      // name; resolveInput throws the unknown-input error for bad names.
+      let set = customDeviceSets.get(name);
+      if (!set) {
+        const resolved = resolveInput(name);
+        set = singleDeviceSet(name, name, name, () => resolved);
+        customDeviceSets.set(name, set);
+      }
+      return set;
+    }
   }
 }
 

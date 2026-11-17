@@ -23,6 +23,11 @@ export function deviceId(kind: string, index: number): string {
 
 const SINGLETON_KINDS = new Set(["keyboard", "smile", "midi", "on-screen"]);
 
+/** Treat a device kind as a singleton (id without `:index`), e.g. named inputs. */
+export function markSingletonKind(kind: string): void {
+  SINGLETON_KINDS.add(kind);
+}
+
 export interface DeviceEntry<T> {
   device: Device;
   value: T;
