@@ -1,0 +1,25 @@
+src/device.ts
+  s_a55528eb871a04::t_97d20f33dad629 170-193,197
+src/sources/dpad.ts
+  s_a55528eb871a04::t_d16cc8f4064f08 11,89,112
+src/sources/gamepad.ts
+  s_a55528eb871a04::t_e3790f86a28ac1 12,25,65
+test/device.test.ts
+  s_a55528eb871a04::t_d4b1c3bf464e56 6,41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "16374b48c36ab89a63f8a347f00d0db157da3b35",
+  "prompts": {},
+  "sessions": {
+    "s_a55528eb871a04": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_a55528eb871a04",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
