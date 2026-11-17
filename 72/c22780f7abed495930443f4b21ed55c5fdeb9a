@@ -1,0 +1,21 @@
+src/transport/websocket.ts
+  s_edd10e8c5cb502::t_4f8e6c716fe7d9 15,28-32,35-41,83-92,94-101,111,119,127,139,176
+test/websocket.test.ts
+  s_edd10e8c5cb502::t_1e4037b3fb23a5 1-175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "72c22780f7abed495930443f4b21ed55c5fdeb9a",
+  "prompts": {},
+  "sessions": {
+    "s_edd10e8c5cb502": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_edd10e8c5cb502",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
