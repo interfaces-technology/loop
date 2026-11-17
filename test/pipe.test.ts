@@ -103,3 +103,23 @@ describe("pipe type-checking", () => {
     expect(results[0]).toEqual({ kind: "data", type: "text", value: "HELLO" });
   });
 });
+
+describe("transform names", () => {
+  it("uses def.name for diagnostics and defaults to 'transform'", () => {
+    const named = transform({
+      name: "double",
+      accepts: "value",
+      emits: "value",
+      process: (p) => p,
+    });
+    const plain = transform({ accepts: "value", emits: "value", process: (p) => p });
+    expect(named.name).toBe("double");
+    expect(plain.name).toBe("transform");
+  });
+
+  it("surfaces the name in adjacency errors", () => {
+    const src = source({ from: "src", emits: "value", read: () => null });
+    const bad = transform({ name: "needs-data", accepts: "data", emits: "data", process: (p) => p });
+    expect(() => pipe(src, bad)).toThrow(/needs-data/);
+  });
+});

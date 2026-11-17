@@ -8,6 +8,8 @@ export interface SourceDef<E extends Kind = Kind> {
 }
 
 export interface TransformDef<A extends Kind = Kind, E extends Kind = Kind> {
+  /** Optional label used in pipeline diagnostics; defaults to "transform". */
+  name?: string;
   accepts: A | A[];
   emits: E;
   dataType?: DataType;
@@ -53,7 +55,7 @@ export function transform<A extends Kind = Kind, E extends Kind = Kind>(
 ): Stage {
   return {
     role: "transform",
-    name: "transform",
+    name: def.name ?? "transform",
     accepts: def.accepts,
     emits: def.emits,
     dataType: def.dataType,
