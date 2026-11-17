@@ -125,6 +125,31 @@ describe("cross-device relay", () => {
     expect(remote.value).toEqual({ x: 1, y: 1 });
   });
 
+  it("emits each inbound packet once instead of every tick", async () => {
+    const transport = memoryTransport("dedup-demo");
+    const receiver = room("dedup-demo", transport);
+    await receiver.connect();
+
+    const inbound = receiver.inbound({ emits: "value" });
+    const inbound2 = receiver.inbound({ emits: "value" });
+
+    transport.send({ kind: "value", value: 1 });
+    transport.send({ kind: "value", value: 2 });
+
+    // Only the newest packet is delivered; packets between ticks coalesce.
+    expect(inbound.read?.()).toEqual({ kind: "value", value: 2 });
+    expect(inbound.read?.()).toBeNull();
+    expect(inbound.read?.()).toBeNull();
+
+    // A second inbound stage tracks its own position and sees it too.
+    expect(inbound2.read?.()).toEqual({ kind: "value", value: 2 });
+    expect(inbound2.read?.()).toBeNull();
+
+    transport.send({ kind: "value", value: 3 });
+    expect(inbound.read?.()).toEqual({ kind: "value", value: 3 });
+    expect(inbound.read?.()).toBeNull();
+  });
+
   it("isolates packet listener errors so remaining listeners still receive", async () => {
     const transport = memoryTransport("listener-demo");
     await transport.connect();

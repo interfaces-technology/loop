@@ -39,9 +39,11 @@ export function clearRelayRooms(): void {
 
 function createRelayRoom(code: string, transport: Transport): RelayRoom {
   let latestPacket: Packet | null = null;
+  let packetSeq = 0;
   let connected = false;
   const unsubPacket = transport.onPacket((packet) => {
     latestPacket = packet;
+    packetSeq += 1;
   });
 
   const relayRoom: RelayRoom = {
@@ -73,11 +75,18 @@ function createRelayRoom(code: string, transport: Transport): RelayRoom {
     },
 
     inbound(opts) {
+      // Emit each received packet exactly once per stage. Without this, read()
+      // would return the same latestPacket every tick and sinks would render
+      // identical data at frame rate. Multiple inbound() stages each track
+      // their own position, so every consumer still sees every packet.
+      let lastSeq = 0;
       return source({
         from: `relay:${code}:in`,
         emits: opts.emits,
         dataType: opts.dataType,
         read() {
+          if (latestPacket === null || packetSeq === lastSeq) return null;
+          lastSeq = packetSeq;
           return latestPacket;
         },
       });
