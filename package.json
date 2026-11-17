@@ -2,7 +2,9 @@
   "name": "@theinterfaces-lab/loop",
   "version": "0.1.0",
   "description": "Loop is the wire — carry normalized packets between inputs and outputs.",
+  "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -21,7 +23,8 @@
     "test": "node_modules/.bin/vitest run",
     "validate": "node_modules/.bin/tsc --noEmit && node_modules/.bin/vitest run",
     "dev": "npm run build && npx --yes serve examples",
-    "relay": "node scripts/relay-server.mjs"
+    "relay": "node scripts/relay-server.mjs",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
