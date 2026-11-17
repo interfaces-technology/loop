@@ -1,0 +1,19 @@
+.github/workflows/ci.yml
+  s_75a8f471027242::t_c3cae318c0ae3d 19-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "285f5b1629236a52318cf249f199db200c012672",
+  "prompts": {},
+  "sessions": {
+    "s_75a8f471027242": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_75a8f471027242",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
