@@ -1,0 +1,21 @@
+src/sources/dpad.ts
+  s_da8305899db95f::t_cb073eaa2d0890 34-43,48-51,53,63-69
+test/device.test.ts
+  s_da8305899db95f::t_9bc414bd425a6b 1,181-227
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2879851f4f6976365bf09bec0465162a37d7eb67",
+  "prompts": {},
+  "sessions": {
+    "s_da8305899db95f": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_da8305899db95f",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
