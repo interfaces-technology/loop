@@ -1,0 +1,21 @@
+examples/04-cross-device-dpad.html
+  s_b2380a5f80ba4e::t_1a38589db6d234 348,440-480,493
+examples/vendor/qrcode-generator.mjs
+  s_b2380a5f80ba4e::t_3f4668bdbf9a27 1-2299
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4382d647cc8c1e09d0026fe1b34ad9b640581df3",
+  "prompts": {},
+  "sessions": {
+    "s_b2380a5f80ba4e": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_b2380a5f80ba4e",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
