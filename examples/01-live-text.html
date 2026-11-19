@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loop — Live Text Input</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.25rem; font-weight: 500; opacity: 0.6; }
+    .device { font-size: 0.75rem; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.1em; }
+    textarea {
+      width: min(480px, 90vw);
+      height: 120px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 1rem;
+      padding: 1rem;
+      resize: vertical;
+    }
+    textarea:focus { outline: 2px solid #555; border-color: #555; }
+    #mirror {
+      width: min(480px, 90vw);
+      min-height: 80px;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 1.25rem;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    #mirror.empty { opacity: 0.3; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>Loop — Live Text</h1>
+  <p class="device">device: keyboard</p>
+
+  <textarea id="input" placeholder="Type here…" autofocus></textarea>
+  <div id="mirror" class="empty">mirrored output appears here (uppercase via pipe)</div>
+
+  <script type="module">
+    import loop from "../dist/index.js";
+
+    const mirror = document.getElementById("mirror");
+    const keyboard = loop.input("keyboard");
+
+    // Push path: instant mirror update on every keystroke
+    keyboard.on("change", (text) => {
+      const upper = text.toUpperCase();
+      mirror.textContent = upper || "mirrored output appears here (uppercase via pipe)";
+      mirror.classList.toggle("empty", !upper);
+    });
+
+    // Pipe: keyboard → uppercase transform → sink (proves data path + pipe)
+    const src = loop.source({
+      from: "keyboard",
+      emits: "data",
+      dataType: "text",
+      read: () => ({ kind: "data", type: "text", value: keyboard.value }),
+    });
+
+    const upper = loop.transform({
+      accepts: "data",
+      emits: "data",
+      dataType: "text",
+      process: (p) => {
+        if (p.kind !== "data") return p;
+        return { kind: "data", type: "text", value: String(p.value).toUpperCase() };
+      },
+    });
+
+    const snk = loop.sink({
+      to: "mirror",
+      accepts: "data",
+      dataType: "text",
+      render: () => { /* mirror updated via on("change") above */ },
+    });
+
+    loop.pipe(src, upper, snk).start();
+  </script>
+</body>
+</html>

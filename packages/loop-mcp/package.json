@@ -1,0 +1,31 @@
+{
+  "name": "@theinterfaces-lab/loop-mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing Loop documentation (SPEC, README, examples).",
+  "type": "module",
+  "bin": {
+    "loop-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "docs"
+  ],
+  "scripts": {
+    "copy-docs": "node scripts/copy-docs.mjs",
+    "build": "npm run copy-docs && node_modules/.bin/tsc",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

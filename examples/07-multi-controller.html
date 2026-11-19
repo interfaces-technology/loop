@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loop — Multi-Controller Assignment</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+    h1 { font-size: 1.25rem; font-weight: 500; opacity: 0.6; }
+    .hint { font-size: 0.85rem; opacity: 0.4; text-align: center; max-width: 640px; line-height: 1.5; }
+    .devices { font-size: 0.75rem; opacity: 0.5; text-align: center; max-width: 640px; }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      width: min(900px, 95vw);
+    }
+    .player {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .player.active {
+      border-color: #2ecc71;
+      background: #141414;
+    }
+    .player h2 {
+      font-size: 0.9rem;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .player .id {
+      font-size: 0.75rem;
+      opacity: 0.4;
+      margin-left: 0.5rem;
+    }
+    .player .assigned {
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .control {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
+      border-radius: 8px;
+    }
+    .control .label {
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+    .control .value {
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+      opacity: 0.9;
+      min-width: 80px;
+      text-align: right;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #555;
+      margin-right: 0.5rem;
+      display: inline-block;
+    }
+    .dot.active { background: #2ecc71; }
+    .arena {
+      width: min(900px, 95vw);
+      height: 200px;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .paddle {
+      position: absolute;
+      width: 12px;
+      height: 60px;
+      background: #e74c3c;
+      top: 50%;
+      transform: translateY(-50%);
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .paddle.active { background: #2ecc71; }
+    .paddle.p1 { left: 2rem; }
+    .paddle.p2 { right: 2rem; }
+    .paddle.p3 { left: 50%; transform: translate(-50%, -50%); }
+    .paddle.p4 { left: 50%; top: 25%; transform: translate(-50%, -50%) rotate(90deg); }
+    .ball {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #3498db;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+  <h1>Loop — Multi-Controller Assignment</h1>
+  <p class="hint">
+    Connect up to 4 gamepads to this device. Each controller is tracked separately via <code>loop.inputs("dpad")</code>
+    and <code>loop.inputs("sliders")</code>, so you can assign different controllers to different players/actions.
+    Keyboard is also tracked as its own device.
+  </p>
+  <p class="devices" id="devices">Connected devices: none</p>
+
+  <div class="container">
+    <div class="player" id="p1">
+      <h2>Player 1 <span class="id" id="p1-id">unassigned</span></h2>
+      <p class="assigned">Assigned: <span id="p1-assigned">dpad</span></p>
+      <div class="controls">
+        <div class="control">
+          <span class="label"><span class="dot" id="p1-move"></span>Move (D-pad/Stick)</span>
+          <span class="value" id="p1-move-val">x: 0.00, y: 0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="player" id="p2">
+      <h2>Player 2 <span class="id" id="p2-id">unassigned</span></h2>
+      <p class="assigned">Assigned: <span id="p2-assigned">sliders.x/y</span></p>
+      <div class="controls">
+        <div class="control">
+          <span class="label"><span class="dot" id="p2-move"></span>Move (Sliders)</span>
+          <span class="value" id="p2-move-val">x: 0.50, y: 0.50</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="player" id="p3">
+      <h2>Player 3 <span class="id" id="p3-id">unassigned</span></h2>
+      <p class="assigned">Assigned: <span id="p3-assigned">sliders.rotation</span></p>
+      <div class="controls">
+        <div class="control">
+          <span class="label"><span class="dot" id="p3-spin"></span>Spin</span>
+          <span class="value" id="p3-spin-val">0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="player" id="p4">
+      <h2>Player 4 <span class="id" id="p4-id">unassigned</span></h2>
+      <p class="assigned">Assigned: <span id="p4-assigned">keyboard</span></p>
+      <div class="controls">
+        <div class="control">
+          <span class="label"><span class="dot" id="p4-active"></span>Typing</span>
+          <span class="value" id="p4-text-val">""</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arena">
+    <div class="paddle p1" id="p1-paddle"></div>
+    <div class="paddle p2" id="p2-paddle"></div>
+    <div class="paddle p3" id="p3-paddle"></div>
+    <div class="paddle p4" id="p4-paddle"></div>
+    <div class="ball"></div>
+  </div>
+
+  <script type="module">
+    import loop from "../dist/index.js";
+
+    const devicesEl = document.getElementById("devices");
+
+    // Device-separated inputs
+    const dpads = loop.inputs("dpad");
+    const sliderSets = loop.inputs("sliders");
+    const keyboards = loop.inputs("keyboard");
+
+    // Track connected devices
+    function updateDevices() {
+      const all = loop.devices();
+      devicesEl.textContent = all.length
+        ? `Connected devices: ${all.map((d) => d.id).join(", ")}`
+        : "Connected devices: none";
+    }
+    updateDevices();
+    loop.onDevices(updateDevices);
+
+    // Assign controllers to players - simple round-robin by device order
+    // Player 1: first dpad device (gamepad or keyboard dpad)
+    // Player 2: first sliders device (gamepad or on-screen)
+    // Player 3: second sliders device if exists (for rotation control)
+    // Player 4: keyboard device
+
+    const p1Dpad = dpads.at(0);
+    const p1Id = dpads.devices()[0]?.id || "none";
+    document.getElementById("p1-id").textContent = p1Id;
+
+    const sliderDevices = sliderSets.devices();
+    const p2Sliders = sliderSets.at(0);
+    const p2Id = sliderDevices[0]?.id || "none";
+    document.getElementById("p2-id").textContent = p2Id;
+
+    const p3Sliders = sliderDevices[1] ? sliderSets.at(1) : sliderSets.at(0);
+    const p3Id = sliderDevices[1]?.id || sliderDevices[0]?.id || "none";
+    document.getElementById("p3-id").textContent = sliderDevices[1] ? sliderDevices[1].id : (sliderDevices[0]?.id || "none");
+
+    const kb = keyboards.at(0);
+    const kbId = keyboards.devices()[0]?.id || "none";
+    document.getElementById("p4-id").textContent = kbId;
+
+    // Animate based on assigned controls
+    loop.tick(() => {
+      // Player 1 - D-pad moves left paddle vertically
+      if (p1Dpad) {
+        const v = p1Dpad.value;
+        const active = v.x !== 0 || v.y !== 0;
+        document.getElementById("p1").classList.toggle("active", active);
+        document.getElementById("p1-move").classList.toggle("active", active);
+        document.getElementById("p1-move-val").textContent = `x: ${v.x.toFixed(2)}, y: ${v.y.toFixed(2)}`;
+        const paddle = document.getElementById("p1-paddle");
+        const y = 50 + (v.y * -40);
+        paddle.style.top = `${y}%`;
+        paddle.classList.toggle("active", active);
+      }
+
+      // Player 2 - Sliders move right paddle
+      if (p2Sliders) {
+        const x = p2Sliders.x.value;
+        const y = p2Sliders.y.value;
+        const active = Math.abs(x - 0.5) > 0.01 || Math.abs(y - 0.5) > 0.01;
+        document.getElementById("p2").classList.toggle("active", active);
+        document.getElementById("p2-move").classList.toggle("active", active);
+        document.getElementById("p2-move-val").textContent = `x: ${x.toFixed(2)}, y: ${y.toFixed(2)}`;
+        const paddle = document.getElementById("p2-paddle");
+        const py = 50 + ((y - 0.5) * -60);
+        paddle.style.top = `${py}%`;
+        paddle.classList.toggle("active", active);
+      }
+
+      // Player 3 - Rotation controls top paddle
+      if (p3Sliders) {
+        const rot = p3Sliders.rotation.value;
+        const active = rot > 0.01;
+        document.getElementById("p3").classList.toggle("active", active);
+        document.getElementById("p3-spin").classList.toggle("active", active);
+        document.getElementById("p3-spin-val").textContent = rot.toFixed(2);
+        const paddle = document.getElementById("p3-paddle");
+        paddle.style.transform = `translate(-50%, -50%) rotate(${rot * 360}deg)`;
+        paddle.classList.toggle("active", active);
+      }
+
+      // Player 4 - Keyboard activity
+      if (kb) {
+        const text = kb.value;
+        const active = text.length > 0;
+        document.getElementById("p4").classList.toggle("active", active);
+        document.getElementById("p4-active").classList.toggle("active", active);
+        const display = text.length > 20 ? text.slice(0, 20) + "..." : text;
+        document.getElementById("p4-text-val").textContent = `"${display}"`;
+        const paddle = document.getElementById("p4-paddle");
+        paddle.classList.toggle("active", active);
+      }
+    });
+  </script>
+</body>
+</html>

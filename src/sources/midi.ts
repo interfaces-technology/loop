@@ -1,6 +1,8 @@
-import { getSlidersInput, setSlidersActiveDevice } from "./gamepad.js";
+import { getMidiLane, getSlidersInput, setSlidersActiveDevice } from "./gamepad.js";
 
 let midiInitialized = false;
+let midiAccess: MIDIAccess | null = null;
+let midiGeneration = 0;
 
 export async function initMidi(): Promise<void> {
   if (midiInitialized || typeof navigator === "undefined") return;
@@ -8,9 +10,14 @@ export async function initMidi(): Promise<void> {
 
   if (!navigator.requestMIDIAccess) return;
 
+  const generation = ++midiGeneration;
   try {
     const access = await navigator.requestMIDIAccess();
+    // resetMidi() ran while the permission prompt was open — drop this init.
+    if (generation !== midiGeneration) return;
+    midiAccess = access;
     const sliders = getSlidersInput();
+    const lane = getMidiLane();
     const ccValues = new Map<number, number>();
 
     for (const input of access.inputs.values()) {
@@ -29,12 +36,32 @@ export async function initMidi(): Promise<void> {
         setSlidersActiveDevice("midi");
 
         const ccs = [...ccValues.entries()].sort((a, b) => a[0] - b[0]);
-        if (ccs[0]) sliders.x._setValue(ccs[0][1]);
-        if (ccs[1]) sliders.y._setValue(ccs[1][1]);
-        if (ccs[2]) sliders.rotation._setValue(ccs[2][1]);
+        if (ccs[0]) {
+          sliders.x._setValue(ccs[0][1]);
+          lane.x._setValue(ccs[0][1]);
+        }
+        if (ccs[1]) {
+          sliders.y._setValue(ccs[1][1]);
+          lane.y._setValue(ccs[1][1]);
+        }
+        if (ccs[2]) {
+          sliders.rotation._setValue(ccs[2][1]);
+          lane.rotation._setValue(ccs[2][1]);
+        }
       };
     }
   } catch {
     // MIDI unavailable — graceful no-op
+  }
+}
+
+export function resetMidi(): void {
+  midiGeneration++;
+  midiInitialized = false;
+  if (midiAccess) {
+    for (const input of midiAccess.inputs.values()) {
+      input.onmidimessage = null;
+    }
+    midiAccess = null;
   }
 }

@@ -1,31 +1,33 @@
 {
   "name": "@theinterfaces-lab/loop",
-  "version": "0.3.0",
-  "description": "Loop is the wire — connect inputs, outputs, controls and devices with one normalized packet.",
+  "version": "0.1.0",
+  "description": "Loop is the wire — carry normalized packets between inputs and outputs.",
+  "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./kit": {
-      "types": "./dist/kit/index.d.ts",
-      "import": "./dist/kit/index.js"
     }
   },
   "files": [
     "dist",
+    "examples",
     "SPEC.md"
   ],
   "scripts": {
     "build": "node_modules/.bin/tsc",
+    "watch": "node_modules/.bin/tsc --watch",
+    "build:mcp": "npm run build --prefix packages/loop-mcp",
     "test": "node_modules/.bin/vitest run",
     "validate": "node_modules/.bin/tsc --noEmit && node_modules/.bin/vitest run",
-    "relay": "node scripts/relay-server.mjs"
+    "dev": "npm run build && npx --yes serve examples",
+    "relay": "node scripts/relay-server.mjs",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",
-    "jsdom": "^30.0.1",
     "typescript": "^5",
     "vitest": "^3",
     "ws": "^8.21.3"

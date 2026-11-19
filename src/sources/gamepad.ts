@@ -2,6 +2,15 @@ import { createHandle, type Handle } from "../handle.js";
 import type { Packet } from "../types.js";
 import { normalizeScalar } from "../types.js";
 import { getRuntime } from "../runtime.js";
+import {
+  createDeviceSet,
+  getDeviceRegistry,
+  type Device,
+  type DeviceEntry,
+  type DeviceSet,
+  gamepadSnapshot,
+} from "../device.js";
+import { createPadLaneManager } from "./gamepad-lanes.js";
 
 export interface SliderBundle {
   x: Handle<number>;
@@ -9,14 +18,50 @@ export interface SliderBundle {
   rotation: Handle<number>;
 }
 
+type Triple = { x: number; y: number; rotation: number };
+
+function readPad(index: number): Triple | null {
+  const gp = gamepadSnapshot()[index];
+  if (!gp) return null;
+
+  const lx = gp.axes[0] ?? 0;
+  const ly = gp.axes[1] ?? 0;
+  const rt = gp.buttons[7]?.value ?? 0;
+  return {
+    x: normalizeScalar((lx + 1) / 2),
+    y: normalizeScalar((-ly + 1) / 2),
+    rotation: normalizeScalar(rt),
+  };
+}
+
+function createBundle(initial: Triple, sample?: () => Triple): SliderBundle {
+  const x = createHandle(initial.x);
+  const y = createHandle(initial.y);
+  const rotation = createHandle(initial.rotation);
+
+  if (sample) {
+    x._setSampler(() => sample().x);
+    y._setSampler(() => sample().y);
+    rotation._setSampler(() => sample().rotation);
+    getRuntime().registerHandle(x as Handle<unknown>);
+    getRuntime().registerHandle(y as Handle<unknown>);
+    getRuntime().registerHandle(rotation as Handle<unknown>);
+  }
+
+  return { x, y, rotation };
+}
+
+// ---------------------------------------------------------------------------
+// Legacy blended input — `loop.input("sliders")`.
+// One bundle that samples whichever device is currently active. Kept for
+// back-compat; device-separated values live in `getSlidersDeviceSet()`.
+// ---------------------------------------------------------------------------
+
 let bundle: SliderBundle | null = null;
 let activeDevice = "on-screen";
-let gamepadConnected = false;
 
-function pollGamepad(): { x: number; y: number; rotation: number } | null {
-  if (typeof navigator === "undefined" || !navigator.getGamepads) return null;
-
-  const gamepads = navigator.getGamepads();
+function pollGamepad(): Triple | null {
+  const gamepads = gamepadSnapshot();
   for (const gp of gamepads) {
     if (!gp) continue;
 
@@ -25,8 +70,7 @@ function pollGamepad(): { x: number; y: number; rotation: number } | null {
     const rt = gp.buttons[7]?.value ?? 0;
 
     const hasInput = Math.abs(lx) > 0.05 || Math.abs(ly) > 0.05 || rt > 0.05;
-    if (hasInput || gamepadConnected) {
-      gamepadConnected = true;
+    if (hasInput) {
       activeDevice = "gamepad";
       return {
         x: normalizeScalar((lx + 1) / 2),
@@ -38,11 +82,7 @@ function pollGamepad(): { x: number; y: number; rotation: number } | null {
   return null;
 }
 
-function sampleSliders(fallback: { x: number; y: number; rotation: number }): {
-  x: number;
-  y: number;
-  rotation: number;
-} {
+function sampleSliders(fallback: Triple): Triple {
   const gp = pollGamepad();
   if (gp) return gp;
 
@@ -93,4 +133,77 @@ export function slidersSourceRead(axis: "x" | "y" | "rotation"): Packet | null {
   const sliders = getSlidersInput();
   const value = sliders[axis].value;
   return { kind: "value", value };
+}
+
+// ---------------------------------------------------------------------------
+// Device-separated lanes — `loop.inputs("sliders")`.
+// One bundle per device identity: `gamepad:0`, `gamepad:1`, `midi`, `on-screen`.
+// ---------------------------------------------------------------------------
+
+const padLanes = createPadLaneManager<SliderBundle>({
+  create: (index) => {
+    const fallback: Triple = { x: 0.5, y: 0.5, rotation: 0 };
+    return createBundle(fallback, () => readPad(index) ?? fallback);
+  },
+  dispose: (bundle) => {
+    bundle.x.dispose();
+    bundle.y.dispose();
+    bundle.rotation.dispose();
+  },
+});
+let onScreenLane: DeviceEntry<SliderBundle> | null = null;
+let midiLane: DeviceEntry<SliderBundle> | null = null;
+
+/** The on-screen slider lane. UI code writes into these handles. */
+export function getOnScreenLane(): SliderBundle {
+  if (!onScreenLane) {
+    const device: Device = getDeviceRegistry().upsert("on-screen", 0, "On-screen");
+    onScreenLane = { device, value: createBundle({ x: 0.5, y: 0.5, rotation: 0 }) };
+  }
+  return onScreenLane.value;
+}
+
+/** The MIDI lane. The MIDI source writes into these handles. */
+export function getMidiLane(): SliderBundle {
+  if (!midiLane) {
+    const device: Device = getDeviceRegistry().upsert("midi", 0, "MIDI");
+    midiLane = { device, value: createBundle({ x: 0.5, y: 0.5, rotation: 0 }) };
+  }
+  return midiLane.value;
+}
+
+function resolveSliderLanes(): Map<string, DeviceEntry<SliderBundle>> {
+  padLanes.bind();
+  getOnScreenLane();
+
+  const out = new Map<string, DeviceEntry<SliderBundle>>();
+  for (const lane of padLanes.values()) out.set(lane.device.id, lane);
+  if (midiLane) out.set(midiLane.device.id, midiLane);
+  if (onScreenLane) out.set(onScreenLane.device.id, onScreenLane);
+  return out;
+}
+
+let sliderDeviceSet: DeviceSet<SliderBundle> | null = null;
+
+/** Values separated by device identity, one `SliderBundle` per device. */
+export function getSlidersDeviceSet(): DeviceSet<SliderBundle> {
+  if (!sliderDeviceSet) {
+    sliderDeviceSet = createDeviceSet("sliders", resolveSliderLanes);
+  }
+  return sliderDeviceSet;
+}
+
+/** Test seam: drop every gamepad/midi lane. */
+export function resetSlidersDeviceSet(): void {
+  padLanes.reset();
+  midiLane = null;
+  onScreenLane = null;
+  sliderDeviceSet = null;
+}
+
+/** Tear down the blended handle and every device lane. */
+export function resetSlidersInput(): void {
+  bundle = null;
+  activeDevice = "on-screen";
+  resetSlidersDeviceSet();
 }

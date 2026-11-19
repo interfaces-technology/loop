@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { source, transform, sink } from "../src/component.js";
-import { pipe } from "../src/pipe.js";
+import { pipe, runPipeline } from "../src/pipe.js";
 import type { Packet } from "../src/types.js";
 
 describe("pipe type-checking", () => {
@@ -101,5 +101,65 @@ describe("pipe type-checking", () => {
     runPipeline(pipeline.stages);
 
     expect(results[0]).toEqual({ kind: "data", type: "text", value: "HELLO" });
+  });
+});
+
+describe("transform names", () => {
+  it("uses def.name for diagnostics and defaults to 'transform'", () => {
+    const named = transform({
+      name: "double",
+      accepts: "value",
+      emits: "value",
+      process: (p) => p,
+    });
+    const plain = transform({ accepts: "value", emits: "value", process: (p) => p });
+    expect(named.name).toBe("double");
+    expect(plain.name).toBe("transform");
+  });
+
+  it("surfaces the name in adjacency errors", () => {
+    const src = source({ from: "src", emits: "value", read: () => null });
+    const bad = transform({ name: "needs-data", accepts: "data", emits: "data", process: (p) => p });
+    expect(() => pipe(src, bad)).toThrow(/needs-data/);
+  });
+});
+
+describe("runtime kind validation", () => {
+  it("drops packets whose kind contradicts the stage's emits", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const bad = {
+      role: "source" as const,
+      name: "bad",
+      emits: "data" as const,
+      read: () => ({ kind: "value" as const, value: 1 }),
+    };
+    const seen: Packet[] = [];
+    const snk = sink({ to: "snk", accepts: ["value", "data"], render: (p) => seen.push(p) });
+
+    runPipeline([bad, snk]);
+    runPipeline([bad, snk]);
+
+    expect(seen).toHaveLength(0);
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+});
+
+describe("degenerate pipelines", () => {
+  it("warns when a pipeline has no source or no sink", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const xf = transform({ accepts: "value", emits: "value", process: (p) => p });
+    const snk = sink({ to: "s", accepts: "value", render: () => {} });
+    const src = source({ from: "s", emits: "value", read: () => null });
+
+    pipe(xf);
+    pipe(snk);
+    pipe(src);
+    expect(warn).toHaveBeenCalledTimes(3);
+
+    warn.mockClear();
+    pipe(src, xf, snk);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

@@ -26,13 +26,20 @@ class BroadcastChannelTransport implements Transport {
     this.channel = new BroadcastChannel(`${CHANNEL_PREFIX}${this.room}`);
 
     this.channel.onmessage = (event: MessageEvent<string>) => {
+      let packet: Packet;
       try {
-        const packet = deserializePacket(event.data);
-        for (const fn of this.packetListeners) {
-          fn(packet);
-        }
+        packet = deserializePacket(event.data);
       } catch {
         // Ignore malformed packets from other tabs.
+        return;
+      }
+      // A throwing listener must not starve the others — isolate each delivery.
+      for (const fn of this.packetListeners) {
+        try {
+          fn(packet);
+        } catch (err) {
+          console.error("[loop] broadcast packet listener threw", err);
+        }
       }
     };
 
@@ -47,7 +54,9 @@ class BroadcastChannelTransport implements Transport {
 
   send(packet: Packet): void {
     if (!this.channel || this.status !== "connected") return;
-    this.channel.postMessage(serializePacket(packet));
+    const text = serializePacket(packet);
+    if (text === null) return;
+    this.channel.postMessage(text);
   }
 
   onPacket(fn: (packet: Packet) => void): () => void {
