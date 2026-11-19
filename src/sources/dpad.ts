@@ -7,10 +7,9 @@ import {
   getDeviceRegistry,
   type DeviceEntry,
   type DeviceSet,
-  type GamepadInfo,
   gamepadSnapshot,
 } from "../device.js";
-import { onGamepads } from "./gamepads.js";
+import { createPadLaneManager } from "./gamepad-lanes.js";
 
 const ZERO: Vec = { x: 0, y: 0 };
 
@@ -165,36 +164,16 @@ export function dpadSourceRead(): Packet | null {
 // One `Handle<Vec>` per device identity: `keyboard`, `gamepad:0`, `gamepad:1`.
 // ---------------------------------------------------------------------------
 
-const gamepadLanes = new Map<number, DeviceEntry<Handle<Vec>>>();
+const padLanes = createPadLaneManager<Handle<Vec>>({
+  create: (index) => {
+    const handle = createHandle(ZERO);
+    handle._setSampler(() => readPadDpad(index));
+    getRuntime().registerHandle(handle as Handle<unknown>);
+    return handle;
+  },
+  dispose: (handle) => handle.dispose(),
+});
 let keyboardLane: DeviceEntry<Handle<Vec>> | null = null;
-let lanesBound = false;
-
-function reconcilePads(pads: GamepadInfo[]): void {
-  const seen = new Set(pads.map((pad) => pad.index));
-
-  for (const pad of pads) {
-    if (!gamepadLanes.has(pad.index)) {
-      const device = getDeviceRegistry().upsert("gamepad", pad.index, pad.id);
-      const handle = createHandle(ZERO);
-      handle._setSampler(() => readPadDpad(pad.index));
-      getRuntime().registerHandle(handle as Handle<unknown>);
-      gamepadLanes.set(pad.index, { device, value: handle });
-    }
-  }
-
-  for (const [index, lane] of gamepadLanes) {
-    if (!seen.has(index)) {
-      lane.value.dispose();
-      gamepadLanes.delete(index);
-    }
-  }
-}
-
-function ensureLanes(): void {
-  if (lanesBound) return;
-  lanesBound = true;
-  onGamepads(reconcilePads);
-}
 
 function ensureKeyboardLane(): void {
   if (keyboardLane) return;
@@ -207,11 +186,11 @@ function ensureKeyboardLane(): void {
 }
 
 function resolveDpadLanes(): Map<string, DeviceEntry<Handle<Vec>>> {
-  ensureLanes();
+  padLanes.bind();
   ensureKeyboardLane();
 
   const out = new Map<string, DeviceEntry<Handle<Vec>>>();
-  for (const lane of gamepadLanes.values()) out.set(lane.device.id, lane);
+  for (const lane of padLanes.values()) out.set(lane.device.id, lane);
   if (keyboardLane) out.set(keyboardLane.device.id, keyboardLane);
   return out;
 }
@@ -228,11 +207,9 @@ export function getDpadDeviceSet(): DeviceSet<Handle<Vec>> {
 
 /** Test seam: drop every keyboard/gamepad lane. */
 export function resetDpadDeviceSet(): void {
-  for (const lane of gamepadLanes.values()) lane.value.dispose();
-  gamepadLanes.clear();
+  padLanes.reset();
   keyboardLane = null;
   dpadDeviceSet = null;
-  lanesBound = false;
 }
 
 /** Tear down the blended handle and every device lane. */
