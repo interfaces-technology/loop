@@ -345,7 +345,7 @@
 
   <script type="module">
     import loop from "../dist/index.js";
-    import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm";
+    import qrcode from "./vendor/qrcode-generator.mjs";
 
     const params = new URLSearchParams(location.search);
 
@@ -437,6 +437,47 @@
       return location.hostname === "localhost" || location.hostname === "127.0.0.1";
     }
 
+    // Render a QR code offline via the vendored qrcode-generator (MIT).
+    function drawQr(canvas, text) {
+      let qr = null;
+      for (let type = 1; type <= 40; type++) {
+        try {
+          const candidate = qrcode(type, "M");
+          candidate.addData(text, "Byte");
+          candidate.make();
+          qr = candidate;
+          break;
+        } catch {
+          // typeNumber too small for this payload — try the next size.
+        }
+      }
+      if (!qr) throw new Error("payload too long for QR");
+
+      const count = qr.getModuleCount();
+      const margin = 4; // quiet zone, in modules
+      const total = count + margin * 2;
+      const scale = Math.max(1, Math.floor(canvas.width / total));
+      const size = scale * total;
+      const offset = Math.floor((canvas.width - size) / 2);
+
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#111111";
+      for (let row = 0; row < count; row++) {
+        for (let col = 0; col < count; col++) {
+          if (qr.isDark(row, col)) {
+            ctx.fillRect(
+              offset + (col + margin) * scale,
+              offset + (row + margin) * scale,
+              scale,
+              scale,
+            );
+          }
+        }
+      }
+    }
+
     async function updateShareLinks() {
       const code = roomInput.value.trim() || "loop-demo";
       const otherRole = role === "controller" ? "display" : "controller";
@@ -449,11 +490,7 @@
 
       const gen = ++qrGeneration;
       try {
-        await QRCode.toCanvas(qrCanvas, joinUrl, {
-          width: 176,
-          margin: 1,
-          color: { dark: "#111111", light: "#ffffff" },
-        });
+        drawQr(qrCanvas, joinUrl);
       } catch {
         qrCaption.textContent = "QR code could not be generated. Copy a link instead.";
       }
