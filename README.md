@@ -59,6 +59,28 @@ loop.reset()
 
 `loop.pipe(...).start()` returns the pipeline for chaining. Handles expose `.value`, `.on("change", fn)`, `.bind(el, apply)`, and `.dispose()`.
 
+### Advanced surface
+
+Exported for recipes, tests, and embeds — stable enough to build on, but the core API above covers most apps.
+
+```javascript
+loop.initMidi()                 // explicit MIDI permission + CC→sliders binding
+loop.getSlidersInput()          // the blended sliders bundle (x/y/rotation handles)
+loop.resolveInput(name)         // the raw InputHandle behind input(name)
+loop.getDpadActiveDevice()      // "gamepad" | "keyboard" | "none"
+loop.getSlidersActiveDevice()   // "gamepad" | "midi" | "on-screen"
+loop.setSlidersActiveDevice(d)  // force which device feeds the blended sliders
+loop.setSmileSampler(fn)        // plug a camera/ML smile detector into input("smile")
+loop.createSmilePrintTransform()// smile threshold + cooldown → data packet
+// getDeviceRegistry is a named export: import { getDeviceRegistry } from "@theinterfaces-lab/loop"
+
+loop.relay.room(code, transport?)          // shared pub/sub room by code
+loop.relay.broadcastTransport(room)        // same-tab BroadcastChannel transport
+loop.relay.websocketTransport(url, room)   // cross-device WebSocket transport
+loop.relay.memoryTransport(room)           // in-process transport for tests
+loop.relay.clear()                         // disconnect every room
+```
+
 ## Devices
 
 When several devices feed one control — two controllers, a controller plus the keyboard — `loop.input(name)` blends them into a single value. To keep values **separated by device identity**, use `loop.inputs(name)`:

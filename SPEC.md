@@ -136,7 +136,7 @@ loop.onDevices(fn: (devices: Device[]) => void): () => void
 ```
 loop.source  loop.transform  loop.sink  loop.component
 loop.pipe    loop.connect
-loop.input   loop.inputs     loop.output     loop.tick
+loop.input   loop.inputs     loop.output     loop.tick     loop.initMidi
 loop.devices  loop.onDevices
 handle.value  handle.on  handle.bind  handle.dispose
 loop.layout  loop.filter  loop.capture
@@ -144,11 +144,24 @@ loop.registerInput  loop.registerOutput  loop.registerLayout
 loop.reset
 ```
 
+Advanced surface (exported for recipes, tests, and embeds):
+
+```
+loop.getSlidersInput  loop.resolveInput
+loop.getDpadActiveDevice  loop.getSlidersActiveDevice  loop.setSlidersActiveDevice
+loop.setSmileSampler  loop.createSmilePrintTransform
+loop.relay.room  loop.relay.broadcastTransport  loop.relay.websocketTransport
+loop.relay.memoryTransport  loop.relay.clear
+getDeviceRegistry            // named export
+```
+
 - `loop.filter(fn)` — a `value` → `value` transform for clamp/scale/remap.
 - `loop.capture(handle)` — bridge an existing `Handle` into a pipeline as a `value` source.
-- `loop.register*` — extend inputs, outputs, and layouts without forking.
+- `loop.register*` — extend inputs, outputs, and layouts without forking; custom names also work through `loop.inputs(name)` as a single-device `DeviceSet`.
 - `loop.inputs(name)` / `loop.devices()` — read inputs separated by device identity (§8a).
+- `loop.initMidi()` — explicit MIDI activation; reading `input("sliders")` never triggers the permission prompt.
 - `loop.reset()` — tear down every singleton (relay rooms, layouts, inputs, devices, frame loop); used by tests and embeds.
+- `loop.relay.*` — cross-device pub/sub rooms over BroadcastChannel, WebSocket, or in-memory transports (§11 note: relay ships in v0.1 as an opt-in transport, not a platform service).
 
 ES module + TS types. Plain `<script>` tag, no build step. Offline by default.
 
