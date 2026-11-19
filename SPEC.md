@@ -1,8 +1,8 @@
 # Loop — Core Library Spec (v0.1)
 
-**Build status:** Slices 1–5 implemented (live text, d-pad square, sliders cube, receipt printer, smile recipe).
+**Build status:** Slices 1–5 implemented (live text, d-pad square, sliders cube, receipt printer, smile recipe), plus device-separated inputs (§8a), the ESC/POS receipt sink, the smile recipe transform, and opt-in cross-device relay transports (`loop.relay.*`, example 04).
 
-Scope: the core function library only — the wire, the component model, inputs, outputs, and binding. Cross-device relay, the marketplace, the AI composer, and the visual canvas are platform concerns, out of scope here (§11). Written precisely enough for an AI coding agent to build from.
+Scope: the core function library — the wire, the component model, inputs, outputs, binding, and the relay transport primitives. The marketplace, the AI composer, a hosted relay service, and the visual canvas remain platform concerns, out of scope here (§11). Written precisely enough for an AI coding agent to build from.
 
 **One line:** Loop is the best wire. You author the two ends; Loop carries a normalized packet between them and never renders anything itself.
 
@@ -19,7 +19,7 @@ Scope: the core function library only — the wire, the component model, inputs,
 
 A single `requestAnimationFrame`-driven tick loop. Each tick: (1) sample every active source (`read` → packet); (2) flow packets through transforms (`process`); (3) deliver to sinks (`render`) and to bound value handles. Sources may also push via events. Pull is the default for render loops; push is for discrete events.
 
-Tick callbacks and handle samplers receive a `TickInfo` of `{ time, delta }` (`delta` in ms, `0` on the first tick) so author animations are framerate-independent. The loop starts on first work and **stops itself** when there are no live pipelines, tick callbacks, or handles.
+Tick callbacks and handle samplers receive a `TickInfo` of `{ time, delta }` (`delta` in ms, `0` on the first tick) so author animations are framerate-independent. The loop starts on first work and **stops itself** when there are no live pipelines, tick callbacks, or handles. A throwing stage or tick callback is reported via `console.error` and skipped — one bad component cannot kill the frame loop. Each produced packet's `kind` is checked against the stage's declared `emits`; mismatches warn once and the packet is dropped.
 
 ## 3. The wire contract
 
@@ -46,7 +46,7 @@ type Packet = PacketOf<Kind>;
 | `frame` | pixel buffer | resolution-independent; consumers scale/fit |
 | `data` | text, events, JSON, coordinates | tagged by `type`; shape by convention |
 
-**Wire safety.** Anything relayed across a transport is validated on receipt and capped at `MAX_WIRE_BYTES` (64 KiB). Malformed or oversized packets are dropped rather than trusted; `frame` packets are not relayed in v0.1.
+**Wire safety.** Anything relayed across a transport is validated on receipt and capped at `MAX_WIRE_BYTES` (64 KiB). Malformed or oversized packets are dropped rather than trusted; `frame` packets are not relayed in v0.1. On the send path, unsupported/oversized/unserializable packets are dropped with a warning instead of throwing. Each transport isolates listener exceptions so one consumer cannot block delivery to the rest.
 
 ## 4. Component model
 
@@ -71,7 +71,7 @@ loop.pipe(...stages)
 loop.connect(a, b)   // == 2-item pipe
 ```
 
-At wiring time Loop checks each adjacent pair: `emits(N)` must be in `accepts(N+1)`; for `data`, an optional `type` match. Mismatch throws at `pipe()` time, not runtime.
+At wiring time Loop checks each adjacent pair: `emits(N)` must be in `accepts(N+1)`; for `data`, an optional `type` match. Mismatch throws at `pipe()` time, not runtime. `pipe()` also warns when a pipeline has no `source` or no `sink` stage, since packets can never flow through it. Transforms accept an optional `name` used in diagnostics (default `"transform"`).
 
 ## 6. Value handles and binding (bind-first)
 
@@ -173,9 +173,9 @@ ES module + TS types. Plain `<script>` tag, no build step. Offline by default.
 4. One hardware sink — `layout("receipt")` → ESC/POS → Web Serial
 5. One recipe — smile → receipt prints
 
-## 11. Out of scope (non-goals for v0.1)
+## 11. Out of scope (non-goals)
 
-Cross-device relay; marketplace/publishing; AI composer; visual canvas; accounts/hosting.
+Marketplace/publishing; AI composer; visual canvas; accounts/hosting; a hosted relay service. Cross-device relay itself ships in the library (`loop.relay.*` + BroadcastChannel/WebSocket/in-memory transports, `scripts/relay-server.mjs` for demos) — only the managed service is out of scope.
 
 ## 12. Package & repo
 
