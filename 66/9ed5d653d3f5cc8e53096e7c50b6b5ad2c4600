@@ -1,0 +1,23 @@
+src/sources/dpad.ts
+  s_bc83c6eb59e80f::t_3ef3099cbc7c44 12,167-175,189,193,210
+src/sources/gamepad-lanes.ts
+  s_bc83c6eb59e80f::t_fb643c336ddb2c 1-60
+src/sources/gamepad.ts
+  s_bc83c6eb59e80f::t_6f9b4c861ee266 13,143-153,176,180,198
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "669ed5d653d3f5cc8e53096e7c50b6b5ad2c4600",
+  "prompts": {},
+  "sessions": {
+    "s_bc83c6eb59e80f": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_bc83c6eb59e80f",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
