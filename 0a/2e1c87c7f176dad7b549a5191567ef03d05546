@@ -1,0 +1,19 @@
+SPEC.md
+  s_76756615b58b7a::t_a828be798119e4 3,5,22,49,74,176,178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0a2e1c87c7f176dad7b549a5191567ef03d05546",
+  "prompts": {},
+  "sessions": {
+    "s_76756615b58b7a": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_76756615b58b7a",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
