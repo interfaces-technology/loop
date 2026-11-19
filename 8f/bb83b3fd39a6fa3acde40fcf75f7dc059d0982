@@ -1,0 +1,21 @@
+README.md
+  s_825798623fa071::t_bc548c999c69a6 62-83
+SPEC.md
+  s_825798623fa071::t_76b9ddeb0da147 139,147-157,160,162,164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8fbb83b3fd39a6fa3acde40fcf75f7dc059d0982",
+  "prompts": {},
+  "sessions": {
+    "s_825798623fa071": {
+      "agent_id": {
+        "tool": "devin",
+        "id": "s_825798623fa071",
+        "model": "unknown"
+      },
+      "human_author": "Hamza Shaebi <hamza@justinterfaces.tech>"
+    }
+  }
+}
